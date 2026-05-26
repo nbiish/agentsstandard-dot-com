@@ -2,7 +2,4 @@
 # Static site — no build step needed
 name = "agentsstandard-dot-com"
 compatibility_date = "2026-05-26"
-
-# Output directory is the root (pure static HTML)
-[site]
-bucket = "."
+pages_build_output_dir = "."
