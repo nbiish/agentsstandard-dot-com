@@ -1,66 +1,105 @@
 # agentsstandard.com
 
-> The website for the [Agents Standard](https://github.com/nbiish/agents-standard) — the AGENTS.md hierarchical configuration standard for AI agents.
+**The AGENTS.md hierarchical configuration standard for AI agents.**
 
-**Live:** [agentsstandard.com](https://agentsstandard.com)
-
-## What This Is
-
-This is the source for [agentsstandard.com](https://agentsstandard.com), a static site that serves the AGENTS.md specification to humans, bots, crawlers, and agents. It is also the **community hub** for contributing to the standard:
-
-- **[Open an issue](https://github.com/nbiish/agentsstandard-dot-com/issues/new)** to add a new agent, update config paths, or propose spec changes
-- Issue templates: `new-agent`, `agent-update`, `spec-change`
+**Live:** [agentsstandard.com](https://agentsstandard.com) · **Spec:** [nbiish/agents-standard](https://github.com/nbiish/agents-standard)
 
 ## The Standard
 
-The specification itself lives in a separate repo: **[nbiish/agents-standard](https://github.com/nbiish/agents-standard)**
-
-This website repo is for the site + community contributions.
-
-## Site Structure
+One file: `AGENTS.md`. Three scopes. All agents.
 
 ```
-agentsstandard-dot-com/
-├── index.html              # The site (pure static HTML, no framework)
-├── llms.txt                # Machine-readable summary for agents/crawlers
-├── agents.json             # Structured spec data + agent config map
-├── setup.sh                # Symlink ~/.agents/AGENTS.md to all agent configs
-├── robots.txt              # Crawlability
-├── sitemap.xml             # SEO
-├── wrangler.toml           # Cloudflare Pages config
-├── .github/ISSUE_TEMPLATE/ # Contribution issue templates
-│   ├── new-agent.md
-│   ├── agent-update.md
-│   ├── spec-change.md
-│   └── config.yml
-└── LICENSE
+~/.agents/AGENTS.md              ← Global (user rules, all projects)
+├── .agents/AGENTS.md            ← Project (team rules, committed)
+│   ├── src/.agents/AGENTS.md    ← Folder (component rules)
+│   └── api/.agents/AGENTS.md    ← Folder (component rules)
 ```
 
-## Design Principles
+Rules cascade and extend, not replace. Same model as `.editorconfig`, `.eslintrc`, `.gitignore`.
 
-- **Pure static HTML** — no JavaScript framework, no build step, no Node dependency
-- **~25KB total** — loads instantly on any connection
-- **Machine-readable** — `llms.txt` and `agents.json` for agents/crawlers/bots
-- **SEO-first** — semantic HTML, proper meta tags, sitemap, robots.txt
-- **Dark by default** — matches the developer aesthetic
+Full specification: **[nbiish/agents-standard](https://github.com/nbiish/agents-standard)**
 
-## Deploy
+## Machine-Readable Files
 
-Deployed to [Cloudflare Pages](https://pages.cloudflare.com/). Zero build step — the root directory is the output.
+This repo serves structured data for agents, crawlers, and tools to intake the standard programmatically:
+
+| File | What it is | Who it's for |
+|------|-----------|--------------|
+| [`llms.txt`](llms.txt) | Plain text summary of the spec + agent config map | LLMs, agents, crawlers |
+| [`agents.json`](agents.json) | Structured JSON: scopes, resolution rules, all 18 agent config paths | Tools, scripts, agent frameworks |
+| [`index.html`](index.html) | The full website | Humans |
+| [`setup.sh`](setup.sh) | Symlink `~/.agents/AGENTS.md` to all agent configs | Users setting up |
+
+### Quick intake
 
 ```bash
-# Deploy
-npx wrangler pages deploy . --project-name agentsstandard-dot-com --branch main
+# For agents/crawlers — read the spec in ~2KB
+curl -sL https://agentsstandard.com/llms.txt
+
+# For tools/scripts — structured JSON
+curl -sL https://agentsstandard.com/agents.json
+
+# For users — run the setup
+curl -sL https://agentsstandard.com/setup.sh | bash
 ```
 
-## Related
+## Agent Config Map
 
-| Repo | Purpose |
-|------|---------|
-| [nbiish/agents-standard](https://github.com/nbiish/agents-standard) | The specification itself (README, setup.sh, agents.json) |
-| [nbiish/doU](https://github.com/nbiish/doU) | Agent skill: iterative goal execution |
-| [nbiish/agentsstandard-dot-com](https://github.com/nbiish/agentsstandard-dot-com) | This repo — website + community hub |
-| [agentskills.io](https://agentskills.io) | Companion standard for agent capabilities (SKILL.md) |
+Every major agent's config file, global path, and project path:
+
+| Agent | Config File | Global Path | Project Path |
+|-------|------------|-------------|--------------|
+| Pi | `AGENTS.md` | `~/.agents/AGENTS.md` (native) | `.agents/AGENTS.md` |
+| Claude Code | `CLAUDE.md` | `~/.claude/CLAUDE.md` | `CLAUDE.md` |
+| OpenAI Codex | `instructions.md` | `~/.codex/instructions.md` | `AGENTS.md` |
+| Cursor | `.cursorrules` | `~/.cursor/rules/` | `.cursorrules` |
+| GitHub Copilot | `copilot-instructions.md` | Settings UI | `.github/copilot-instructions.md` |
+| Windsurf | `.windsurfrules` | `~/.codeium/windsurf/` | `.windsurfrules` |
+| Cline | `.clinerules` | `~/.cline/cline_rules` | `.clinerules` |
+| Roo Code | `.roorules` | `~/.roo/rules/` | `.roorules` |
+| Gemini CLI | `GEMINI.md` | `~/.gemini/GEMINI.md` | `GEMINI.md` |
+| Kiro | `kiro.md` | `~/.kiro/kiro.md` | `.kiro/kiro.md` |
+| Augment | `.augment-guidelines` | `~/.augment/guidelines` | `.augment-guidelines` |
+| Goose | `goosehints` | `~/.config/goose/goosehints` | `.goosehints` |
+| Junie | `guidelines.md` | `~/.junie/guidelines.md` | `.junie/guidelines.md` |
+| Trae | `.trae/rules/` | `~/.trae/rules/` | `.trae/rules/` |
+| Aider | `.aider.conf.yml` | `~/.aider.conf.yml` | `.aider.conf.yml` |
+| Continue | `config.json` | `~/.continue/config.json` | `.continue/config.json` |
+| Mistral Codestral | `CODESTRAL.md` | — | `CODESTRAL.md` |
+| Qwen Code | `QWEN.md` | — | `QWEN.md` |
+
+Full structured data in [`agents.json`](agents.json).
+
+## Contribute
+
+**[Open an issue](https://github.com/nbiish/agentsstandard-dot-com/issues/new)** to:
+
+### For providers
+
+Your agent tool updated its config file location? Your agent now reads `~/.agents/AGENTS.md` natively? Open an **[agent update](https://github.com/nbiish/agentsstandard-dot-com/issues/new?labels=update&template=agent-update.md)** issue with the new path and a link to your docs.
+
+### For users
+
+Found a new agent that's not on the map? Agent changed its config format? Open a **[new agent](https://github.com/nbiish/agentsstandard-dot-com/issues/new?labels=new-agent&template=new-agent.md)** issue with the config file name, paths, and a source link.
+
+### For everyone
+
+Want to change the spec itself? Open a **[spec change](https://github.com/nbiish/agentsstandard-dot-com/issues/new?labels=spec&template=spec-change.md)** issue with what you want to change and why.
+
+## Relationship to Agent Skills
+
+- **[Agent Skills](https://agentskills.io)** (SKILL.md) = what the agent can *do*
+- **Agents Standard** (AGENTS.md) = how the agent should *behave*
+
+Both use the `.agents/` directory. They complement each other.
+
+## Repos
+
+| Repo | What it is |
+|------|-----------|
+| [nbiish/agents-standard](https://github.com/nbiish/agents-standard) | The specification (README, setup.sh, agents.json) |
+| [nbiish/agentsstandard-dot-com](https://github.com/nbiish/agentsstandard-dot-com) | This repo — website + machine-readable files + issue tracker |
+| [nbiish/doU](https://github.com/nbiish/doU) | Agent skill: date-stamped iterative goal execution |
 
 ## License
 
