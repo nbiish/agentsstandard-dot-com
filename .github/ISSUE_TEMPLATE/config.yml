@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Agent Skills Standard
+    url: https://agentskills.io
+    about: The companion SKILL.md standard for agent capabilities
+  - name: agentsstandard.com
+    url: https://agentsstandard.com
+    about: The specification website
