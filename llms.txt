@@ -53,7 +53,7 @@ Plain Markdown. No YAML frontmatter. No schema. Just write rules.
 
 Create `~/.agents/AGENTS.md`, then symlink to each agent's config location. One source of truth.
 
-See setup script at: https://github.com/nbiish/agentsstandard-dot-com
+See setup script at: https://github.com/nbiish/agents-standard
 
 ## Relationship to Agent Skills
 
