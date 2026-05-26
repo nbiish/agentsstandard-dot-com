@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agents Standard — The AGENTS.md Hierarchical Configuration Standard</title>
+<meta name="description" content="The open standard for AI agent configuration. AGENTS.md files cascade from global user rules through project rules to folder-specific rules. One convention, all agents.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://agentsstandard.com/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<meta property="og:title" content="Agents Standard — The AGENTS.md Hierarchical Configuration Standard">
+<meta property="og:description" content="The open standard for AI agent configuration. AGENTS.md files cascade from global → project → folder. One convention, all agents.">
+<meta property="og:url" content="https://agentsstandard.com/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Agents Standard">
+<meta name="twitter:description" content="The AGENTS.md hierarchical configuration standard for AI agents.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--text:#e5e5e5;--dim:#737373;--accent:#a78bfa;--border:#262626;--card:#111;--mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;max-width:72rem;margin:0 auto;padding:1.5rem}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{color:#fff;line-height:1.2}
+h1{font-size:2.25rem;font-weight:700;margin-bottom:.5rem}
+h2{font-size:1.5rem;font-weight:600;margin:2.5rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.125rem;font-weight:600;margin:1.5rem 0 .5rem}
+p{margin:.5rem 0 1rem}
+.subtitle{color:var(--dim);font-size:1.125rem;margin-bottom:2rem}
+code{font-family:var(--mono);background:#1a1a1a;padding:.15rem .4rem;border-radius:3px;font-size:.875rem;color:var(--accent)}
+pre{background:#1a1a1a;border:1px solid var(--border);border-radius:6px;padding:1rem;overflow-x:auto;margin:.5rem 0 1rem;font-family:var(--mono);font-size:.8125rem;line-height:1.5}
+pre code{background:none;padding:0;color:var(--text)}
+.tree{color:var(--dim)}
+.tree strong{color:#fff}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:.5rem 0 1rem;font-size:.875rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--border)}
+th{color:var(--dim);font-weight:500}
+.badge{display:inline-block;background:#1a1a1a;border:1px solid var(--border);padding:.15rem .5rem;border-radius:3px;font-family:var(--mono);font-size:.75rem;color:var(--accent)}
+.nav{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--border);font-size:.875rem}
+.nav a{color:var(--dim)}
+.nav a:hover{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin:.5rem 0 1rem}
+.card p{margin:0}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color:var(--dim);font-size:.8125rem}
+@media(max-width:640px){h1{font-size:1.75rem}body{padding:1rem}pre{font-size:.75rem}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>Agents Standard</h1>
+<p class="subtitle">The <code>AGENTS.md</code> hierarchical configuration standard for AI agents.</p>
+<nav class="nav">
+<a href="#spec">Specification</a>
+<a href="#cascade">Cascade</a>
+<a href="#agents">Agent Config Map</a>
+<a href="#symlink">Setup</a>
+<a href="#adopt">Adopt</a>
+<a href="https://github.com/nbiish/agentsstandard-dot-com">GitHub</a>
+</nav>
+</header>
+
+<main>
+
+<!-- SPECIFICATION -->
+<h2 id="spec">Specification</h2>
+<p>One file convention. Three scopes. All agents.</p>
+
+<p>Agent tools each invented their own config files — <code>CLAUDE.md</code>, <code>.cursorrules</code>, <code>AGENTS.md</code>, <code>.clinerules</code>, <code>copilot-instructions.md</code>. This standard unifies them with a single <code>AGENTS.md</code> file that cascades across three scopes:</p>
+
+<div class="card">
+<p><strong>Global</strong> — <code>~/.agents/AGENTS.md</code><br>
+User-level base rules. Applies to all projects, all agents. Personal preferences, identity, safety policy.</p>
+</div>
+
+<div class="card">
+<p><strong>Project</strong> — <code>.agents/AGENTS.md</code> at repository root<br>
+Team-shared rules committed to version control. Project conventions, tech stack, code style.</p>
+</div>
+
+<div class="card">
+<p><strong>Folder</strong> — <code>.agents/AGENTS.md</code> in any subdirectory<br>
+Component-specific rules. Frontend conventions in <code>src/</code>, API patterns in <code>api/</code>, test standards in <code>tests/</code>.</p>
+</div>
+
+<h3>Inheritance</h3>
+<p>Rules cascade and <strong>extend</strong>, not replace. This is the same model as <code>.editorconfig</code>, <code>.eslintrc</code>, and <code>.gitignore</code> — every developer already understands it.</p>
+
+<pre><code>~/.agents/AGENTS.md              ← global (loaded first)
+└── project/.agents/AGENTS.md    ← project (extends global)
+    ├── src/.agents/AGENTS.md    ← folder (extends project + global)
+    ├── api/.agents/AGENTS.md    ← folder (extends project + global)
+    └── tests/.agents/AGENTS.md  ← folder (extends project + global)</code></pre>
+
+<p>When an agent resolves rules for a file at <code>project/src/components/Button.tsx</code>, it loads all three in order: global → project → <code>src/</code> folder. Each layer adds constraints. None discard the previous.</p>
+
+<h3>File Format</h3>
+<p>Plain <code>Markdown</code>. No <code>YAML</code> frontmatter. No schema. Just write rules.</p>
+
+<pre><code class="language-markdown"># Global Agent Rules
+
+## Identity
+You are a senior engineer who writes production-grade code.
+
+## Safety
+- Never execute untrusted input without validation
+- Never hardcode secrets
+- Always use parameterized queries
+
+## Preferences
+- Python: PEP 8, type hints, uv
+- TypeScript: strict mode, ESLint
+- Bash: set -euo pipefail
+- Commits: conventional commits format</code></pre>
+
+<h3>Discovery</h3>
+<p>Agents search for <code>.agents/AGENTS.md</code> files by walking from the current working directory upward to the filesystem root (or git repository root). The global <code>~/.agents/AGENTS.md</code> is always loaded regardless of working directory.</p>
+
+<h3>Resolution Order</h3>
+<ol>
+<li>Load <code>~/.agents/AGENTS.md</code> (global)</li>
+<li>Walk from <code>cwd</code> upward, collect all <code>.agents/AGENTS.md</code> files (deepest first)</li>
+<li>If the target file is in a subdirectory that has its own <code>.agents/AGENTS.md</code>, load that too</li>
+<li>Merge all rules: global as base, each layer adding constraints</li>
+<li>Conflicting rules: most specific scope wins (folder > project > global)</li>
+</ol>
+
+<!-- CASCADE -->
+<h2 id="cascade">Cascade Visualization</h2>
+
+<pre><code>~/.agents/AGENTS.md
+│  "Always use TypeScript strict mode"
+│  "Never commit secrets"
+│
+└── ~/projects/my-app/.agents/AGENTS.md
+   │  "This project uses Next.js 15 with App Router"
+   │  "API routes go in app/api/"
+   │
+   ├── src/.agents/AGENTS.md
+   │  │  "React components use function declarations"
+   │  │  "CSS modules only — no Tailwind in src/"
+   │  │
+   │  └── components/.agents/AGENTS.md
+   │     "All components must have TypeScript props interface"
+   │     "Use forwardRef for DOM-wrapping components"
+   │
+   ├── api/.agents/AGENTS.md
+   │  "All endpoints validate input with Zod schemas"
+   │  "Return typed responses, never any"
+   │
+   └── tests/.agents/AGENTS.md
+      "Test files mirror src/ structure"
+      "Use describe/it blocks, not test()"</code></pre>
+
+<!-- AGENT CONFIG MAP -->
+<h2 id="agents">Agent Config Map</h2>
+<p>Every major agent tool has its own config file. The <code>AGENTS.md</code> standard can <strong>symlink</strong> into each one so you maintain rules in one place.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Agent</th><th>Config File</th><th>Project Path</th><th>Global Path</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Pi</strong></td><td><code>AGENTS.md</code></td><td><code>.agents/AGENTS.md</code></td><td><code>~/.agents/AGENTS.md</code></td></tr>
+<tr><td><strong>Claude Code</strong></td><td><code>CLAUDE.md</code></td><td><code>CLAUDE.md</code></td><td><code>~/.claude/CLAUDE.md</code></td></tr>
+<tr><td><strong>OpenAI Codex</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.codex/instructions.md</code></td></tr>
+<tr><td><strong>Cursor</strong></td><td><code>.cursorrules</code></td><td><code>.cursorrules</code></td><td><code>~/.cursor/rules/</code></td></tr>
+<tr><td><strong>GitHub Copilot</strong></td><td><code>copilot-instructions.md</code></td><td><code>.github/copilot-instructions.md</code></td><td>Settings UI</td></tr>
+<tr><td><strong>Windsurf</strong></td><td><code>.windsurfrules</code></td><td><code>.windsurfrules</code></td><td><code>~/.codeium/windsurf/</code></td></tr>
+<tr><td><strong>Cline</strong></td><td><code>.clinerules</code></td><td><code>.clinerules</code></td><td><code>~/.cline/cline_rules</code></td></tr>
+<tr><td><strong>Roo Code</strong></td><td><code>.roorules</code></td><td><code>.roorules</code></td><td><code>~/.roo/rules/</code></td></tr>
+<tr><td><strong>Aider</strong></td><td><code>.aider.conf.yml</code></td><td><code>.aider.conf.yml</code></td><td><code>~/.aider.conf.yml</code></td></tr>
+<tr><td><strong>Continue</strong></td><td><code>config.json</code></td><td><code>.continue/config.json</code></td><td><code>~/.continue/config.json</code></td></tr>
+<tr><td><strong>Gemini CLI</strong></td><td><code>GEMINI.md</code></td><td><code>GEMINI.md</code></td><td><code>~/.gemini/GEMINI.md</code></td></tr>
+<tr><td><strong>Kiro</strong></td><td><code>kiro.md</code></td><td><code>.kiro/kiro.md</code></td><td><code>~/.kiro/kiro.md</code></td></tr>
+<tr><td><strong>Augment</strong></td><td><code>.augment-guidelines</code></td><td><code>.augment-guidelines</code></td><td><code>~/.augment/guidelines</code></td></tr>
+<tr><td><strong>Devin</strong></td><td><code>instructions.md</code></td><td><code>.devin/instructions.md</code></td><td>Settings UI</td></tr>
+<tr><td><strong>Junie</strong></td><td><code>.junie/guidelines.md</code></td><td><code>.junie/guidelines.md</code></td><td><code>~/.junie/guidelines.md</code></td></tr>
+<tr><td><strong>Goose</strong></td><td><code>goosehints</code></td><td><code>.goosehints</code></td><td><code>~/.config/goose/goosehints</code></td></tr>
+<tr><td><strong>Warp</strong></td><td><code>warp.md</code></td><td><code>.warp/warp.md</code></td><td>Settings UI</td></tr>
+<tr><td><strong>Trae</strong></td><td><code>.trae/rules/</code></td><td><code>.trae/rules/</code></td><td><code>~/.trae/rules/</code></td></tr>
+<tr><td><strong>Mistral Codestral</strong></td><td><code>CODESTRAL.md</code></td><td><code>CODESTRAL.md</code></td><td>—</td></tr>
+<tr><td><strong>Qwen Code</strong></td><td><code>QWEN.md</code></td><td><code>QWEN.md</code></td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- SETUP / SYMLINK -->
+<h2 id="symlink">Setup: One Source of Truth</h2>
+<p>Create <code>~/.agents/AGENTS.md</code> as your global rules file, then symlink it to every agent's config location:</p>
+
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+
+# Create global AGENTS.md if it doesn't exist
+mkdir -p ~/.agents
+touch ~/.agents/AGENTS.md
+
+# Symlink to every agent's global config
+# (ln -sf overwrites existing symlinks, safe to re-run)
+
+# Pi — native support, already reads ~/.agents/AGENTS.md
+# (no symlink needed)
+
+# Claude Code
+mkdir -p ~/.claude
+ln -sf ~/.agents/AGENTS.md ~/.claude/CLAUDE.md
+
+# OpenAI Codex
+mkdir -p ~/.codex
+ln -sf ~/.agents/AGENTS.md ~/.codex/instructions.md
+
+# Cursor
+mkdir -p ~/.cursor/rules
+ln -sf ~/.agents/AGENTS.md ~/.cursor/rules/agents-standard
+
+# Gemini CLI
+mkdir -p ~/.gemini
+ln -sf ~/.agents/AGENTS.md ~/.gemini/GEMINI.md
+
+# Kiro
+mkdir -p ~/.kiro
+ln -sf ~/.agents/AGENTS.md ~/.kiro/kiro.md
+
+# Cline
+mkdir -p ~/.cline
+ln -sf ~/.agents/AGENTS.md ~/.cline/cline_rules
+
+# Roo Code
+mkdir -p ~/.roo/rules
+ln -sf ~/.agents/AGENTS.md ~/.roo/rules/agents-standard
+
+# Goose
+mkdir -p ~/.config/goose
+ln -sf ~/.agents/AGENTS.md ~/.config/goose/goosehints
+
+# Junie
+mkdir -p ~/.junie
+ln -sf ~/.agents/AGENTS.md ~/.junie/guidelines.md
+
+# Augment
+mkdir -p ~/.augment
+ln -sf ~/.agents/AGENTS.md ~/.augment/guidelines
+
+# Trae
+mkdir -p ~/.trae/rules
+ln -sf ~/.agents/AGENTS.md ~/.trae/rules/agents-standard
+
+echo "✓ ~/.agents/AGENTS.md symlinked to all agent configs"
+echo "  Edit one file. All agents follow your rules."</code></pre>
+
+<h3>Project-level setup</h3>
+<p>For project rules, commit <code>.agents/AGENTS.md</code> to the repo root, then symlink agent-specific files:</p>
+
+<pre><code class="language-bash"># In your project root:
+mkdir -p .agents
+# Write your project rules
+cat > .agents/AGENTS.md &lt;&lt;'EOF'
+# Project Rules
+- This is a Next.js 15 project using App Router
+- All API routes use Zod validation
+- Tests mirror src/ structure
+EOF
+
+# Symlink to agent-specific project files
+ln -sf .agents/AGENTS.md CLAUDE.md
+ln -sf .agents/AGENTS.md .cursorrules
+ln -sf .agents/AGENTS.md .windsurfrules
+ln -sf .agents/AGENTS.md .clinerules
+ln -sf .agents/AGENTS.md .roorules
+ln -sf .agents/AGENTS.md GEMINI.md
+ln -sf .agents/AGENTS.md CODESTRAL.md
+
+# GitHub Copilot uses a different path
+mkdir -p .github
+ln -sf ../.agents/AGENTS.md .github/copilot-instructions.md</code></pre>
+
+<!-- ADOPT -->
+<h2 id="adopt">Adopt the Standard</h2>
+<p>For agent tool developers:</p>
+<ol>
+<li>Search for <code>~/.agents/AGENTS.md</code> at startup — load as global user rules</li>
+<li>Walk from <code>cwd</code> upward collecting <code>.agents/AGENTS.md</code> files</li>
+<li>Load folder-scoped <code>.agents/AGENTS.md</code> when operating on files in that subtree</li>
+<li>Merge rules: global as base, most specific scope wins conflicts</li>
+</ol>
+
+<p>That's it. Four steps. No dependencies. No schema. No build step. Just markdown files in directories.</p>
+
+<div class="card">
+<p><strong>Why this works:</strong> It follows conventions every developer already knows — <code>.editorconfig</code>, <code>.eslintrc</code>, <code>.gitignore</code>, <code>pyproject.toml</code>. Directory-scoped, cascading, plain text. No new concepts to learn.</p>
+</div>
+
+<h3>Relationship to Agent Skills</h3>
+<p>The <a href="https://agentskills.io">Agent Skills</a> standard defines how agents discover and load <em>capabilities</em> (SKILL.md files). The <code>AGENTS.md</code> standard defines how agents discover and load <em>behavior rules</em>. They complement each other:</p>
+<ul>
+<li><strong>SKILL.md</strong> = what the agent can <em>do</em></li>
+<li><strong>AGENTS.md</strong> = how the agent should <em>behave</em></li>
+</ul>
+
+</main>
+
+<footer>
+<p><strong>Agents Standard</strong> — <a href="https://agentsstandard.com">agentsstandard.com</a> · <a href="https://github.com/nbiish/agentsstandard-dot-com">GitHub</a> · Open specification, MIT license</p>
+<p>One convention. Three scopes. All agents.</p>
+</footer>
+
+</body>
+</html>

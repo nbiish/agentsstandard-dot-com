@@ -1,0 +1,157 @@
+{
+  "$schema": "https://agentsstandard.com/schema.json",
+  "name": "AGENTS.md",
+  "version": "1.0.0",
+  "description": "Hierarchical configuration standard for AI agents",
+  "scopes": {
+    "global": {
+      "path": "~/.agents/AGENTS.md",
+      "description": "User-level base rules for all projects and agents",
+      "discovery": "Always loaded regardless of working directory"
+    },
+    "project": {
+      "path": ".agents/AGENTS.md",
+      "description": "Team-shared rules committed to version control",
+      "discovery": "At repository root, searched upward from cwd"
+    },
+    "folder": {
+      "path": ".agents/AGENTS.md",
+      "description": "Component-specific rules for subdirectories",
+      "discovery": "In any subdirectory, applies to that subtree"
+    }
+  },
+  "resolution": {
+    "order": ["global", "project", "folder"],
+    "conflict": "most-specific-wins",
+    "inheritance": "extend"
+  },
+  "format": "text/markdown",
+  "agents": {
+    "pi": {
+      "file": "AGENTS.md",
+      "global_path": "~/.agents/AGENTS.md",
+      "project_path": ".agents/AGENTS.md",
+      "native": true
+    },
+    "claude-code": {
+      "file": "CLAUDE.md",
+      "global_path": "~/.claude/CLAUDE.md",
+      "project_path": "CLAUDE.md",
+      "native": false,
+      "symlink": true
+    },
+    "codex": {
+      "file": "instructions.md",
+      "global_path": "~/.codex/instructions.md",
+      "project_path": "AGENTS.md",
+      "native": false,
+      "symlink": true
+    },
+    "cursor": {
+      "file": ".cursorrules",
+      "global_path": "~/.cursor/rules/",
+      "project_path": ".cursorrules",
+      "native": false,
+      "symlink": true
+    },
+    "github-copilot": {
+      "file": "copilot-instructions.md",
+      "global_path": null,
+      "project_path": ".github/copilot-instructions.md",
+      "native": false,
+      "symlink": true
+    },
+    "windsurf": {
+      "file": ".windsurfrules",
+      "global_path": "~/.codeium/windsurf/",
+      "project_path": ".windsurfrules",
+      "native": false,
+      "symlink": true
+    },
+    "cline": {
+      "file": ".clinerules",
+      "global_path": "~/.cline/cline_rules",
+      "project_path": ".clinerules",
+      "native": false,
+      "symlink": true
+    },
+    "roo": {
+      "file": ".roorules",
+      "global_path": "~/.roo/rules/",
+      "project_path": ".roorules",
+      "native": false,
+      "symlink": true
+    },
+    "gemini-cli": {
+      "file": "GEMINI.md",
+      "global_path": "~/.gemini/GEMINI.md",
+      "project_path": "GEMINI.md",
+      "native": false,
+      "symlink": true
+    },
+    "kiro": {
+      "file": "kiro.md",
+      "global_path": "~/.kiro/kiro.md",
+      "project_path": ".kiro/kiro.md",
+      "native": false,
+      "symlink": true
+    },
+    "augment": {
+      "file": ".augment-guidelines",
+      "global_path": "~/.augment/guidelines",
+      "project_path": ".augment-guidelines",
+      "native": false,
+      "symlink": true
+    },
+    "goose": {
+      "file": "goosehints",
+      "global_path": "~/.config/goose/goosehints",
+      "project_path": ".goosehints",
+      "native": false,
+      "symlink": true
+    },
+    "junie": {
+      "file": "guidelines.md",
+      "global_path": "~/.junie/guidelines.md",
+      "project_path": ".junie/guidelines.md",
+      "native": false,
+      "symlink": true
+    },
+    "trae": {
+      "file": ".trae/rules/",
+      "global_path": "~/.trae/rules/",
+      "project_path": ".trae/rules/",
+      "native": false,
+      "symlink": true
+    },
+    "aider": {
+      "file": ".aider.conf.yml",
+      "global_path": "~/.aider.conf.yml",
+      "project_path": ".aider.conf.yml",
+      "native": false,
+      "symlink": true
+    },
+    "continue": {
+      "file": "config.json",
+      "global_path": "~/.continue/config.json",
+      "project_path": ".continue/config.json",
+      "native": false,
+      "symlink": true,
+      "note": "JSON format, not markdown"
+    },
+    "codestral": {
+      "file": "CODESTRAL.md",
+      "global_path": null,
+      "project_path": "CODESTRAL.md",
+      "native": false,
+      "symlink": true
+    },
+    "qwen-code": {
+      "file": "QWEN.md",
+      "global_path": null,
+      "project_path": "QWEN.md",
+      "native": false,
+      "symlink": true
+    }
+  }
+}

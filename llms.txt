@@ -1,0 +1,69 @@
+# agentsstandard.com
+
+> The AGENTS.md hierarchical configuration standard for AI agents. One file convention, three scopes, all agents.
+
+## The Standard
+
+Agent tools each invented their own config files (CLAUDE.md, .cursorrules, AGENTS.md, .clinerules, copilot-instructions.md). This standard unifies them.
+
+One file: `AGENTS.md`. Three scopes:
+
+1. **Global**: `~/.agents/AGENTS.md` — User-level base rules for all projects, all agents
+2. **Project**: `.agents/AGENTS.md` at repo root — Team-shared rules committed to version control
+3. **Folder**: `.agents/AGENTS.md` in any subdirectory — Component-specific rules
+
+Rules cascade and extend, not replace. Same model as .editorconfig, .eslintrc, .gitignore.
+
+## Resolution Order
+
+1. Load `~/.agents/AGENTS.md` (global)
+2. Walk from cwd upward, collect `.agents/AGENTS.md` files (deepest first)
+3. If target file is in a subdirectory with its own `.agents/AGENTS.md`, load that too
+4. Merge: global as base, each layer adds constraints
+5. Conflicts: most specific scope wins (folder > project > global)
+
+## File Format
+
+Plain Markdown. No YAML frontmatter. No schema. Just write rules.
+
+## Agent Config Map
+
+| Agent | Config File | Global Path |
+|-------|------------|-------------|
+| Pi | AGENTS.md | ~/.agents/AGENTS.md (native) |
+| Claude Code | CLAUDE.md | ~/.claude/CLAUDE.md |
+| OpenAI Codex | instructions.md | ~/.codex/instructions.md |
+| Cursor | .cursorrules | ~/.cursor/rules/ |
+| GitHub Copilot | copilot-instructions.md | Settings UI |
+| Windsurf | .windsurfrules | ~/.codeium/windsurf/ |
+| Cline | .clinerules | ~/.cline/cline_rules |
+| Roo Code | .roorules | ~/.roo/rules/ |
+| Gemini CLI | GEMINI.md | ~/.gemini/GEMINI.md |
+| Kiro | kiro.md | ~/.kiro/kiro.md |
+| Augment | .augment-guidelines | ~/.augment/guidelines |
+| Goose | goosehints | ~/.config/goose/goosehints |
+| Junie | guidelines.md | ~/.junie/guidelines.md |
+| Trae | .trae/rules/ | ~/.trae/rules/ |
+| Aider | .aider.conf.yml | ~/.aider.conf.yml |
+| Continue | config.json | ~/.continue/config.json |
+| Mistral Codestral | CODESTRAL.md | — |
+| Qwen Code | QWEN.md | — |
+
+## Setup
+
+Create `~/.agents/AGENTS.md`, then symlink to each agent's config location. One source of truth.
+
+See setup script at: https://github.com/nbiish/agentsstandard-dot-com
+
+## Relationship to Agent Skills
+
+- **SKILL.md** (agentskills.io) = what the agent can do
+- **AGENTS.md** (agentsstandard.com) = how the agent should behave
+
+They complement each other. Both use the `.agents/` directory convention.
+
+## Links
+
+- Spec: https://agentsstandard.com
+- GitHub: https://github.com/nbiish/agentsstandard-dot-com
+- Agent Skills: https://agentskills.io
