@@ -1,0 +1,83 @@
+{
+  "$schema": "https://agentsstandard.com/schemas/mcp-settings.json",
+  "version": "1.0.0",
+  "description": "Universal MCP server configuration — all agents read from ~/.agents/mcp-settings.json",
+
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-filesystem", "/path/to/allowed/dir"],
+      "env": {},
+      "autoApprove": ["read_file", "list_directory", "search_files"],
+      "disabled": false,
+      "timeout": 30000
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@github/github-mcp-server"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "autoApprove": ["search_repositories", "get_file_contents", "list_issues"],
+      "disabled": false
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {},
+      "autoApprove": ["browser_navigate", "browser_snapshot", "browser_click"],
+      "disabled": false
+    },
+    "brave-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "autoApprove": ["brave_web_search", "brave_local_search"],
+      "disabled": false
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-postgres", "${DATABASE_URL}"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      },
+      "autoApprove": [],
+      "disabled": true,
+      "note": "Enable when working with databases"
+    },
+    "figma-remote": {
+      "type": "sse",
+      "url": "https://mcp.figma.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${FIGMA_API_KEY}"
+      },
+      "autoApprove": ["get_design_context", "get_screenshot"],
+      "disabled": false
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-memory"],
+      "env": {},
+      "autoApprove": ["create_entities", "create_relations", "read_graph", "search_nodes"],
+      "disabled": false
+    }
+  },
+
+  "global": {
+    "autoApproveDefaults": {
+      "read_only": true,
+      "note": "When true, all read-only tools (read, search, list, get) across all servers are auto-approved"
+    },
+    "disabledTools": [],
+    "maxToolCallsPerTurn": 50,
+    "toolCallTimeout": 60000
+  }
+}
