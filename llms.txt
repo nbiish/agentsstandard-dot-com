@@ -4,11 +4,9 @@
 
 ## The Standard
 
-Agent tools each invented their own config files (CLAUDE.md, .cursorrules, AGENTS.md, .clinerules, copilot-instructions.md). This standard unifies them.
-
 One file: `AGENTS.md`. Three scopes:
 
-1. **Global**: `~/.agents/AGENTS.md` — User-level base rules for all projects, all agents
+1. **Global**: `~/.agents/AGENTS.md` — User-level base rules for all projects, all agents (loaded first)
 2. **Project**: `.agents/AGENTS.md` at repo root — Team-shared rules committed to version control
 3. **Folder**: `.agents/AGENTS.md` in any subdirectory — Component-specific rules
 
@@ -16,9 +14,9 @@ Rules cascade and extend, not replace. Same model as .editorconfig, .eslintrc, .
 
 ## Resolution Order
 
-1. Load `~/.agents/AGENTS.md` (global)
-2. Walk from cwd upward, collect `.agents/AGENTS.md` files (deepest first)
-3. If target file is in a subdirectory with its own `.agents/AGENTS.md`, load that too
+1. Load `~/.agents/AGENTS.md` (global — always loaded first)
+2. Walk from repo root to load `.agents/AGENTS.md` (project rules)
+3. Walk from cwd upward and load `.agents/AGENTS.md` files (folder rules)
 4. Merge: global as base, each layer adds constraints
 5. Conflicts: most specific scope wins (folder > project > global)
 
@@ -26,28 +24,66 @@ Rules cascade and extend, not replace. Same model as .editorconfig, .eslintrc, .
 
 Plain Markdown. No YAML frontmatter. No schema. Just write rules.
 
-## Agent Config Map
+## Agent Config Map (30 agents)
 
-| Agent | Config File | Global Path |
-|-------|------------|-------------|
-| Pi | AGENTS.md | ~/.agents/AGENTS.md (native) |
-| Claude Code | CLAUDE.md | ~/.claude/CLAUDE.md |
-| OpenAI Codex | instructions.md | ~/.codex/instructions.md |
-| Cursor | .cursorrules | ~/.cursor/rules/ |
-| GitHub Copilot | copilot-instructions.md | Settings UI |
-| Windsurf | .windsurfrules | ~/.codeium/windsurf/ |
-| Cline | .clinerules | ~/.cline/cline_rules |
-| Roo Code | .roorules | ~/.roo/rules/ |
-| Gemini CLI | GEMINI.md | ~/.gemini/GEMINI.md |
-| Kiro | kiro.md | ~/.kiro/kiro.md |
-| Augment | .augment-guidelines | ~/.augment/guidelines |
-| Goose | goosehints | ~/.config/goose/goosehints |
-| Junie | guidelines.md | ~/.junie/guidelines.md |
-| Trae | .trae/rules/ | ~/.trae/rules/ |
-| Aider | .aider.conf.yml | ~/.aider.conf.yml |
-| Continue | config.json | ~/.continue/config.json |
-| Mistral Codestral | CODESTRAL.md | — |
-| Qwen Code | QWEN.md | — |
+| Agent | Config File | Global Path | Project Path | Native |
+|-------|------------|-------------|--------------|--------|
+| Pi | AGENTS.md | ~/.agents/AGENTS.md | .agents/AGENTS.md | Yes |
+| Claude Code | CLAUDE.md | ~/.claude/CLAUDE.md | CLAUDE.md | — |
+| Agy / Gemini CLI | GEMINI.md | ~/.gemini/GEMINI.md | GEMINI.md | — |
+| OpenAI Codex | AGENTS.md | ~/.codex/instructions.md | AGENTS.md | — |
+| Cursor | .cursorrules | ~/.cursor/rules/ | .cursorrules | — |
+| GitHub Copilot | copilot-instructions.md | Settings UI | .github/copilot-instructions.md | — |
+| Windsurf | .windsurfrules | ~/.codeium/windsurf/ | .windsurfrules | — |
+| Cline | .clinerules | ~/.cline/cline_rules | .clinerules | — |
+| Roo Code | .roorules | ~/.roo/rules/ | .roorules | — |
+| Kiro | kiro.md | ~/.kiro/kiro.md | .kiro/kiro.md | — |
+| Kilo Code | AGENTS.md | — | AGENTS.md | Yes |
+| Augment | .augment-guidelines | ~/.augment/guidelines | .augment-guidelines | — |
+| Goose | goosehints | ~/.config/goose/goosehints | .goosehints | — |
+| Junie | guidelines.md | ~/.junie/guidelines.md | .junie/guidelines.md | — |
+| Trae | .trae/rules/ | ~/.trae/rules/ | .trae/rules/ | — |
+| Devin | instructions.md | Settings UI | .devin/instructions.md | — |
+| Warp | warp.md | — | WARP.md | — |
+| Crush | AGENTS.md | ~/.config/crush/crush.md | CRUSH.md | — |
+| OpenCode | AGENTS.md | — | AGENTS.md | Yes |
+| Deep Agents (dcode) | AGENTS.md | ~/.deepagents/AGENTS.md | .deepagents/AGENTS.md | Yes |
+| CodeWhale | AGENTS.md | — | AGENTS.md | — |
+| Hermes Agent | AGENTS.md | ~/.hermes/SOUL.md | AGENTS.md | — |
+| Agent Zero (a0) | AGENTS.md | — | AGENTS.md | — |
+| Aider | .aider.conf.yml | ~/.aider.conf.yml | .aider.conf.yml | — |
+| Continue | config.json | ~/.continue/config.json | .continue/config.json | — |
+| Qwen Code | QWEN.md | — | QWEN.md | — |
+| Mistral Codestral | CODESTRAL.md | — | CODESTRAL.md | — |
+| Zed | AGENTS.md | — | AGENTS.md | Yes |
+| MiniCC | AGENTS.md | ~/.minicc/AGENTS.md | AGENTS.md | — |
+| fcc-claude | AGENTS.md | ~/.fcc/.env | AGENTS.md | — |
+
+## MCP Config Map
+
+| Agent | Global MCP Config | Project MCP Config | Format |
+|-------|-------------------|-------------------|--------|
+| Claude Code | ~/.claude.json | .mcp.json | JSON |
+| Agy | ~/.gemini/settings.json | .gemini/settings.json | JSON |
+| Codex | ~/.codex/config.toml | — | TOML |
+| Cursor | ~/.cursor/mcp.json | .cursor/mcp.json | JSON |
+| Windsurf | ~/.codeium/windsurf/mcp_config.json | — | JSON |
+| Copilot | Settings UI | .github/copilot-mcp.json | JSON |
+| Cline | VS Code globalStorage | — | JSON |
+| Roo Code | Extension settings | .roo/mcp.json | JSON |
+| Kiro | ~/.kiro/settings/mcp.json | .kiro/settings/mcp.json | JSON |
+| Kilo Code | Extension settings | kilo.jsonc | JSONC |
+| Goose | ~/.config/goose/config.yaml | — | YAML |
+| Junie | ~/.junie/mcp.json | .junie/mcp/mcp.json | JSON |
+| Trae | Trae/User/mcp.json | — | JSON |
+| Crush | ~/.config/crush/crush.json | crush.json | JSON |
+| OpenCode | ~/.config/opencode/opencode.json | opencode.json | JSONC |
+| dcode | ~/.deepagents/.mcp.json | — | JSON |
+| Qwen Code | ~/.qwen/settings.json | .qwen/settings.json | JSON |
+| Continue | ~/.continue/config.yaml | .continue/mcpServers/ | YAML |
+| MiniCC | ~/.minicc/mcp.json | .minicc/mcp.json | JSON |
+| Warp | Warp Drive UI | .warp/mcp.json | JSON |
+| Hermes Agent | ~/.hermes/config.yaml | — | YAML |
 
 ## Setup
 
@@ -55,15 +91,28 @@ Create `~/.agents/AGENTS.md`, then symlink to each agent's config location. One 
 
 See setup script at: https://github.com/nbiish/agents-standard
 
+## The Full ~/.agents/ Directory
+
+```
+~/.agents/
+├── AGENTS.md              ← Behavior rules (this standard)
+├── mcp-settings.json      ← MCP server configs (universal)
+└── skills/                ← Agent Skills (capabilities)
+    └── **/SKILL.md        ← Skills discovered by all agents
+```
+
 ## Relationship to Agent Skills
 
 - **SKILL.md** (agentskills.io) = what the agent can do
 - **AGENTS.md** (agentsstandard.com) = how the agent should behave
+- **mcp-settings.json** = what external tools are available
 
-They complement each other. Both use the `.agents/` directory convention.
+They complement each other. All use the `.agents/` directory convention.
 
 ## Links
 
 - Spec: https://agentsstandard.com
-- GitHub: https://github.com/nbiish/agentsstandard-dot-com
+- GitHub (spec): https://github.com/nbiish/agents-standard
+- GitHub (site): https://github.com/nbiish/agentsstandard-dot-com
 - Agent Skills: https://agentskills.io
+- Structured JSON: https://agentsstandard.com/agents.json

@@ -56,9 +56,10 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color
 <a href="#spec">Specification</a>
 <a href="#cascade">Cascade</a>
 <a href="#agents">Agent Config Map</a>
+<a href="#mcp">MCP Config Map</a>
 <a href="#symlink">Setup</a>
 <a href="#adopt">Adopt</a>
-<a href="https://github.com/nbiish/agents-standard">Spec</a>
+<a href="https://github.com/nbiish/agents-standard">Spec Repo</a>
 <a href="https://github.com/nbiish/agentsstandard-dot-com/issues/new">Add an Agent</a>
 </nav>
 </header>
@@ -73,7 +74,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color
 
 <div class="card">
 <p><strong>Global</strong> — <code>~/.agents/AGENTS.md</code><br>
-User-level base rules. Applies to all projects, all agents. Personal preferences, identity, safety policy.</p>
+User-level base rules. Applies to all projects, all agents. Personal preferences, identity, safety policy. <strong>Loaded first.</strong></p>
 </div>
 
 <div class="card">
@@ -85,6 +86,15 @@ Team-shared rules committed to version control. Project conventions, tech stack,
 <p><strong>Folder</strong> — <code>.agents/AGENTS.md</code> in any subdirectory<br>
 Component-specific rules. Frontend conventions in <code>src/</code>, API patterns in <code>api/</code>, test standards in <code>tests/</code>.</p>
 </div>
+
+<h3>Resolution Order</h3>
+<ol>
+<li>Load <code>~/.agents/AGENTS.md</code> (global — always loaded first regardless of working directory)</li>
+<li>Walk from repository root, load <code>.agents/AGENTS.md</code> (project-level rules, committed to VC)</li>
+<li>For the target file's directory, walk upward from <code>cwd</code> and load any <code>.agents/AGENTS.md</code> found (folder-specific rules)</li>
+<li>Merge all rules: global as base, each layer adding constraints</li>
+<li>Conflicting rules: most specific scope wins (folder > project > global)</li>
+</ol>
 
 <h3>Inheritance</h3>
 <p>Rules cascade and <strong>extend</strong>, not replace. This is the same model as <code>.editorconfig</code>, <code>.eslintrc</code>, and <code>.gitignore</code> — every developer already understands it.</p>
@@ -117,16 +127,7 @@ You are a senior engineer who writes production-grade code.
 - Commits: conventional commits format</code></pre>
 
 <h3>Discovery</h3>
-<p>Agents search for <code>.agents/AGENTS.md</code> files by walking from the current working directory upward to the filesystem root (or git repository root). The global <code>~/.agents/AGENTS.md</code> is always loaded regardless of working directory.</p>
-
-<h3>Resolution Order</h3>
-<ol>
-<li>Load <code>~/.agents/AGENTS.md</code> (global)</li>
-<li>Walk from <code>cwd</code> upward, collect all <code>.agents/AGENTS.md</code> files (deepest first)</li>
-<li>If the target file is in a subdirectory that has its own <code>.agents/AGENTS.md</code>, load that too</li>
-<li>Merge all rules: global as base, each layer adding constraints</li>
-<li>Conflicting rules: most specific scope wins (folder > project > global)</li>
-</ol>
+<p>Agents search for <code>.agents/AGENTS.md</code> files by walking from the current working directory upward to the filesystem root (or git repository root). The global <code>~/.agents/AGENTS.md</code> is always loaded first regardless of working directory.</p>
 
 <!-- CASCADE -->
 <h2 id="cascade">Cascade Visualization</h2>
@@ -157,36 +158,86 @@ You are a senior engineer who writes production-grade code.
 
 <!-- AGENT CONFIG MAP -->
 <h2 id="agents">Agent Config Map</h2>
-<p>Every major agent tool has its own config file. The <code>AGENTS.md</code> standard can <strong>symlink</strong> into each one so you maintain rules in one place.</p>
+<p>Every major agent tool has its own config file. The <code>AGENTS.md</code> standard can <strong>symlink</strong> into each one so you maintain rules in one place. Each path is verified against the agent's official documentation.</p>
 
 <div class="table-wrap">
 <table>
 <thead>
-<tr><th>Agent</th><th>Config File</th><th>Project Path</th><th>Global Path</th></tr>
+<tr><th>Agent</th><th>Config File</th><th>Project Path</th><th>Global Path</th><th>Docs</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Pi</strong></td><td><code>AGENTS.md</code></td><td><code>.agents/AGENTS.md</code></td><td><code>~/.agents/AGENTS.md</code></td></tr>
-<tr><td><strong>Claude Code</strong></td><td><code>CLAUDE.md</code></td><td><code>CLAUDE.md</code></td><td><code>~/.claude/CLAUDE.md</code></td></tr>
-<tr><td><strong>OpenAI Codex</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.codex/instructions.md</code></td></tr>
-<tr><td><strong>Cursor</strong></td><td><code>.cursorrules</code></td><td><code>.cursorrules</code></td><td><code>~/.cursor/rules/</code></td></tr>
-<tr><td><strong>GitHub Copilot</strong></td><td><code>copilot-instructions.md</code></td><td><code>.github/copilot-instructions.md</code></td><td>Settings UI</td></tr>
-<tr><td><strong>Windsurf</strong></td><td><code>.windsurfrules</code></td><td><code>.windsurfrules</code></td><td><code>~/.codeium/windsurf/</code></td></tr>
-<tr><td><strong>Cline</strong></td><td><code>.clinerules</code></td><td><code>.clinerules</code></td><td><code>~/.cline/cline_rules</code></td></tr>
-<tr><td><strong>Roo Code</strong></td><td><code>.roorules</code></td><td><code>.roorules</code></td><td><code>~/.roo/rules/</code></td></tr>
-<tr><td><strong>Aider</strong></td><td><code>.aider.conf.yml</code></td><td><code>.aider.conf.yml</code></td><td><code>~/.aider.conf.yml</code></td></tr>
-<tr><td><strong>Continue</strong></td><td><code>config.json</code></td><td><code>.continue/config.json</code></td><td><code>~/.continue/config.json</code></td></tr>
-<tr><td><strong>Gemini CLI</strong></td><td><code>GEMINI.md</code></td><td><code>GEMINI.md</code></td><td><code>~/.gemini/GEMINI.md</code></td></tr>
-<tr><td><strong>Kiro</strong></td><td><code>kiro.md</code></td><td><code>.kiro/kiro.md</code></td><td><code>~/.kiro/kiro.md</code></td></tr>
-<tr><td><strong>Augment</strong></td><td><code>.augment-guidelines</code></td><td><code>.augment-guidelines</code></td><td><code>~/.augment/guidelines</code></td></tr>
-<tr><td><strong>Devin</strong></td><td><code>instructions.md</code></td><td><code>.devin/instructions.md</code></td><td>Settings UI</td></tr>
-<tr><td><strong>Junie</strong></td><td><code>.junie/guidelines.md</code></td><td><code>.junie/guidelines.md</code></td><td><code>~/.junie/guidelines.md</code></td></tr>
-<tr><td><strong>Goose</strong></td><td><code>goosehints</code></td><td><code>.goosehints</code></td><td><code>~/.config/goose/goosehints</code></td></tr>
-<tr><td><strong>Warp</strong></td><td><code>warp.md</code></td><td><code>.warp/warp.md</code></td><td>Settings UI</td></tr>
-<tr><td><strong>Trae</strong></td><td><code>.trae/rules/</code></td><td><code>.trae/rules/</code></td><td><code>~/.trae/rules/</code></td></tr>
-<tr><td><strong>Mistral Codestral</strong></td><td><code>CODESTRAL.md</code></td><td><code>CODESTRAL.md</code></td><td>—</td></tr>
-<tr><td><strong>Qwen Code</strong></td><td><code>QWEN.md</code></td><td><code>QWEN.md</code></td><td>—</td></tr>
+<tr><td><strong>Pi</strong></td><td><code>AGENTS.md</code></td><td><code>.agents/AGENTS.md</code></td><td><code>~/.agents/AGENTS.md</code> <span class="badge">native</span></td><td><a href="https://github.com/nbiish/agents-standard">docs</a></td></tr>
+<tr><td><strong>Claude Code</strong></td><td><code>CLAUDE.md</code></td><td><code>CLAUDE.md</code></td><td><code>~/.claude/CLAUDE.md</code></td><td><a href="https://docs.anthropic.com/en/docs/claude-code">docs</a></td></tr>
+<tr><td><strong>Agy</strong></td><td><code>GEMINI.md</code></td><td><code>GEMINI.md</code></td><td><code>~/.gemini/GEMINI.md</code></td><td><a href="https://github.com/google-gemini/gemini-cli">docs</a></td></tr>
+<tr><td><strong>OpenAI Codex</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.codex/instructions.md</code></td><td><a href="https://github.com/openai/codex">docs</a></td></tr>
+<tr><td><strong>Cursor</strong></td><td><code>.cursorrules</code></td><td><code>.cursorrules</code></td><td><code>~/.cursor/rules/</code></td><td><a href="https://docs.cursor.com/context/rules-for-ai">docs</a></td></tr>
+<tr><td><strong>GitHub Copilot</strong></td><td><code>copilot-instructions.md</code></td><td><code>.github/copilot-instructions.md</code></td><td>Settings UI</td><td><a href="https://docs.github.com/en/copilot/customizing-copilot">docs</a></td></tr>
+<tr><td><strong>Windsurf</strong></td><td><code>.windsurfrules</code></td><td><code>.windsurfrules</code></td><td><code>~/.codeium/windsurf/</code></td><td><a href="https://docs.windsurf.com/windsurf/cascade">docs</a></td></tr>
+<tr><td><strong>Cline</strong></td><td><code>.clinerules</code></td><td><code>.clinerules</code></td><td><code>~/.cline/cline_rules</code></td><td><a href="https://github.com/cline/cline">docs</a></td></tr>
+<tr><td><strong>Roo Code</strong></td><td><code>.roorules</code></td><td><code>.roorules</code></td><td><code>~/.roo/rules/</code></td><td><a href="https://docs.roocode.com/features/mcp/using-mcp-in-roo">docs</a></td></tr>
+<tr><td><strong>Kiro</strong></td><td><code>kiro.md</code></td><td><code>.kiro/kiro.md</code></td><td><code>~/.kiro/kiro.md</code></td><td><a href="https://kiro.dev/docs">docs</a></td></tr>
+<tr><td><strong>Kilo Code</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td>— <span class="badge">native</span></td><td><a href="https://kilo.ai/docs/customize/agents-md">docs</a></td></tr>
+<tr><td><strong>Aider</strong></td><td><code>.aider.conf.yml</code></td><td><code>.aider.conf.yml</code></td><td><code>~/.aider.conf.yml</code></td><td><a href="https://aider.chat/docs/config.html">docs</a></td></tr>
+<tr><td><strong>Continue</strong></td><td><code>config.json</code></td><td><code>.continue/config.json</code></td><td><code>~/.continue/config.json</code></td><td><a href="https://docs.continue.dev/customize/deep-dives/mcp">docs</a></td></tr>
+<tr><td><strong>Augment</strong></td><td><code>.augment-guidelines</code></td><td><code>.augment-guidelines</code></td><td><code>~/.augment/guidelines</code></td><td><a href="https://docs.augmentcode.com">docs</a></td></tr>
+<tr><td><strong>Goose</strong></td><td><code>goosehints</code></td><td><code>.goosehints</code></td><td><code>~/.config/goose/goosehints</code></td><td><a href="https://block.github.io/goose/docs">docs</a></td></tr>
+<tr><td><strong>Junie</strong></td><td><code>.junie/guidelines.md</code></td><td><code>.junie/guidelines.md</code></td><td><code>~/.junie/guidelines.md</code></td><td><a href="https://www.jetbrains.com/help/junie">docs</a></td></tr>
+<tr><td><strong>Trae</strong></td><td><code>.trae/rules/</code></td><td><code>.trae/rules/</code></td><td><code>~/.trae/rules/</code></td><td><a href="https://docs.trae.ai/en/agent">docs</a></td></tr>
+<tr><td><strong>Devin</strong></td><td><code>instructions.md</code></td><td><code>.devin/instructions.md</code></td><td>Settings UI</td><td><a href="https://docs.devin.ai">docs</a></td></tr>
+<tr><td><strong>Warp</strong></td><td><code>warp.md</code></td><td><code>WARP.md</code></td><td>—</td><td><a href="https://github.com/warpdotdev/Warp">docs</a></td></tr>
+<tr><td><strong>CodeWhale</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td>—</td><td><a href="https://github.com/Hmbown/CodeWhale">docs</a></td></tr>
+<tr><td><strong>Hermes Agent</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.hermes/SOUL.md</code></td><td><a href="https://github.com/NousResearch/hermes-agent">docs</a></td></tr>
+<tr><td><strong>Agent Zero (a0)</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td>—</td><td><a href="https://github.com/agent0ai/agent-zero">docs</a></td></tr>
+<tr><td><strong>Crush</strong></td><td><code>AGENTS.md</code></td><td><code>CRUSH.md</code></td><td><code>~/.config/crush/crush.md</code></td><td><a href="https://github.com/charmbracelet/crush">docs</a></td></tr>
+<tr><td><strong>OpenCode</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td>— <span class="badge">native</span></td><td><a href="https://github.com/anomalyco/opencode">docs</a></td></tr>
+<tr><td><strong>Deep Agents (dcode)</strong></td><td><code>AGENTS.md</code></td><td><code>.deepagents/AGENTS.md</code></td><td><code>~/.deepagents/AGENTS.md</code> <span class="badge">native</span></td><td><a href="https://docs.langchain.com/oss/javascript/deepagents/code/overview">docs</a></td></tr>
+<tr><td><strong>Qwen Code</strong></td><td><code>QWEN.md</code></td><td><code>QWEN.md</code></td><td>—</td><td><a href="https://qwenlm.github.io/qwen-code-docs/">docs</a></td></tr>
+<tr><td><strong>Mistral Codestral</strong></td><td><code>CODESTRAL.md</code></td><td><code>CODESTRAL.md</code></td><td>—</td><td><a href="https://docs.mistral.ai/agents/mcp/">docs</a></td></tr>
+<tr><td><strong>Zed</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td>— <span class="badge">native</span></td><td><a href="https://zed.dev/docs">docs</a></td></tr>
+<tr><td><strong>MiniCC</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.minicc/AGENTS.md</code></td><td><a href="https://github.com/TokenRollAI/minicc">docs</a></td></tr>
+<tr><td><strong>fcc-claude</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.fcc/.env</code></td><td><a href="https://github.com/nbiish/agents-standard">docs</a></td></tr>
 </tbody>
 </table>
+</div>
+
+<!-- MCP CONFIG MAP -->
+<h2 id="mcp">MCP Config Map</h2>
+<p>Each agent also has its own location for MCP server configurations. Here's where every agent stores its MCP settings, verified against official documentation.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Agent</th><th>Global MCP Config</th><th>Project MCP Config</th><th>Format</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Claude Code</strong></td><td><code>~/.claude.json</code></td><td><code>.mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Agy / Gemini CLI</strong></td><td><code>~/.gemini/settings.json</code></td><td><code>.gemini/settings.json</code></td><td>JSON</td></tr>
+<tr><td><strong>OpenAI Codex</strong></td><td><code>~/.codex/config.toml</code></td><td>—</td><td>TOML</td></tr>
+<tr><td><strong>Cursor</strong></td><td><code>~/.cursor/mcp.json</code></td><td><code>.cursor/mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Windsurf</strong></td><td><code>~/.codeium/windsurf/mcp_config.json</code></td><td>—</td><td>JSON</td></tr>
+<tr><td><strong>GitHub Copilot</strong></td><td>Settings UI</td><td><code>.github/copilot-mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Cline</strong></td><td>VS Code globalStorage</td><td>—</td><td>JSON</td></tr>
+<tr><td><strong>Roo Code</strong></td><td>Extension settings</td><td><code>.roo/mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Kiro</strong></td><td><code>~/.kiro/settings/mcp.json</code></td><td><code>.kiro/settings/mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Kilo Code</strong></td><td>Extension settings</td><td><code>kilo.jsonc</code></td><td>JSONC</td></tr>
+<tr><td><strong>Goose</strong></td><td><code>~/.config/goose/config.yaml</code></td><td>—</td><td>YAML</td></tr>
+<tr><td><strong>Junie</strong></td><td><code>~/.junie/mcp.json</code></td><td><code>.junie/mcp/mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Trae</strong></td><td><code>~/Library/Application Support/Trae/User/mcp.json</code></td><td>—</td><td>JSON</td></tr>
+<tr><td><strong>Crush</strong></td><td><code>~/.config/crush/crush.json</code></td><td><code>crush.json</code></td><td>JSON</td></tr>
+<tr><td><strong>OpenCode</strong></td><td><code>~/.config/opencode/opencode.json</code></td><td><code>opencode.json</code></td><td>JSONC</td></tr>
+<tr><td><strong>Deep Agents (dcode)</strong></td><td><code>~/.deepagents/.mcp.json</code></td><td>—</td><td>JSON</td></tr>
+<tr><td><strong>Qwen Code</strong></td><td><code>~/.qwen/settings.json</code></td><td><code>.qwen/settings.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Continue</strong></td><td><code>~/.continue/config.yaml</code></td><td><code>.continue/mcpServers/</code></td><td>YAML</td></tr>
+<tr><td><strong>MiniCC</strong></td><td><code>~/.minicc/mcp.json</code></td><td><code>.minicc/mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Warp</strong></td><td>Warp Drive UI</td><td><code>.warp/mcp.json</code></td><td>JSON</td></tr>
+<tr><td><strong>Hermes Agent</strong></td><td><code>~/.hermes/config.yaml</code></td><td>—</td><td>YAML</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The Problem This Standard Solves</h3>
+<div class="card">
+<p>Every agent stores MCP configs in a <strong>different file, different format, different path</strong>. JSON, YAML, TOML, JSONC. Global-only, project-only, both. This standard proposes <code>~/.agents/mcp-settings.json</code> as a universal MCP config that agents can read — and <code>~/.agents/skills/**/SKILL.md</code> as a universal skills directory — so users configure once and all agents follow.</p>
 </div>
 
 <!-- SETUP / SYMLINK -->
@@ -210,6 +261,10 @@ touch ~/.agents/AGENTS.md
 mkdir -p ~/.claude
 ln -sf ~/.agents/AGENTS.md ~/.claude/CLAUDE.md
 
+# Agy / Gemini CLI
+mkdir -p ~/.gemini
+ln -sf ~/.agents/AGENTS.md ~/.gemini/GEMINI.md
+
 # OpenAI Codex
 mkdir -p ~/.codex
 ln -sf ~/.agents/AGENTS.md ~/.codex/instructions.md
@@ -218,13 +273,9 @@ ln -sf ~/.agents/AGENTS.md ~/.codex/instructions.md
 mkdir -p ~/.cursor/rules
 ln -sf ~/.agents/AGENTS.md ~/.cursor/rules/agents-standard
 
-# Gemini CLI
-mkdir -p ~/.gemini
-ln -sf ~/.agents/AGENTS.md ~/.gemini/GEMINI.md
-
-# Kiro
-mkdir -p ~/.kiro
-ln -sf ~/.agents/AGENTS.md ~/.kiro/kiro.md
+# Windsurf
+mkdir -p ~/.codeium/windsurf
+ln -sf ~/.agents/AGENTS.md ~/.codeium/windsurf/rules
 
 # Cline
 mkdir -p ~/.cline
@@ -233,6 +284,10 @@ ln -sf ~/.agents/AGENTS.md ~/.cline/cline_rules
 # Roo Code
 mkdir -p ~/.roo/rules
 ln -sf ~/.agents/AGENTS.md ~/.roo/rules/agents-standard
+
+# Kiro
+mkdir -p ~/.kiro
+ln -sf ~/.agents/AGENTS.md ~/.kiro/kiro.md
 
 # Goose
 mkdir -p ~/.config/goose
@@ -250,8 +305,24 @@ ln -sf ~/.agents/AGENTS.md ~/.augment/guidelines
 mkdir -p ~/.trae/rules
 ln -sf ~/.agents/AGENTS.md ~/.trae/rules/agents-standard
 
-echo "✓ ~/.agents/AGENTS.md symlinked to all agent configs"
-echo "  Edit one file. All agents follow your rules."</code></pre>
+# Crush
+mkdir -p ~/.config/crush
+ln -sf ~/.agents/AGENTS.md ~/.config/crush/crush.md
+
+# Hermes Agent
+mkdir -p ~/.hermes
+ln -sf ~/.agents/AGENTS.md ~/.hermes/SOUL.md
+
+# MiniCC
+mkdir -p ~/.minicc
+ln -sf ~/.agents/AGENTS.md ~/.minicc/AGENTS.md
+
+# Deep Agents (dcode)
+mkdir -p ~/.deepagents
+ln -sf ~/.agents/AGENTS.md ~/.deepagents/AGENTS.md
+
+echo "Done. Edit ~/.agents/AGENTS.md — all symlinked agents follow your rules."
+echo "See https://agentsstandard.com for project-level setup."</code></pre>
 
 <h3>Project-level setup</h3>
 <p>For project rules, commit <code>.agents/AGENTS.md</code> to the repo root, then symlink agent-specific files:</p>
@@ -274,10 +345,51 @@ ln -sf .agents/AGENTS.md .clinerules
 ln -sf .agents/AGENTS.md .roorules
 ln -sf .agents/AGENTS.md GEMINI.md
 ln -sf .agents/AGENTS.md CODESTRAL.md
+ln -sf .agents/AGENTS.md QWEN.md
+ln -sf .agents/AGENTS.md CRUSH.md
 
 # GitHub Copilot uses a different path
 mkdir -p .github
 ln -sf ../.agents/AGENTS.md .github/copilot-instructions.md</code></pre>
+
+<!-- ADOPT -->
+<h2 id="adopt">Adopt the Standard</h2>
+<p>For agent tool developers:</p>
+<ol>
+<li>Search for <code>~/.agents/AGENTS.md</code> at startup — load as global user rules <strong>(loaded first)</strong></li>
+<li>Walk from repo root to load <code>.agents/AGENTS.md</code> — project-level rules</li>
+<li>Walk from <code>cwd</code> upward collecting <code>.agents/AGENTS.md</code> files — folder-scoped rules</li>
+<li>Merge rules: global as base, most specific scope wins conflicts</li>
+</ol>
+
+<p>That's it. Four steps. No dependencies. No schema. No build step. Just markdown files in directories.</p>
+
+<div class="card">
+<p><strong>Why this works:</strong> It follows conventions every developer already knows — <code>.editorconfig</code>, <code>.eslintrc</code>, <code>.gitignore</code>, <code>pyproject.toml</code>. Directory-scoped, cascading, plain text. No new concepts to learn.</p>
+</div>
+
+<h3>Beyond Rules: A Complete Agent Configuration Directory</h3>
+<p>The <code>~/.agents/</code> directory can serve as a single source of truth for all agent configuration — not just behavior rules:</p>
+
+<pre><code>~/.agents/
+├── AGENTS.md              ← Behavior rules (global → project → folder cascade)
+├── mcp-settings.json      ← MCP server configs (all agents read from here)
+└── skills/                ← Agent Skills (reusable capabilities)
+    └── **/SKILL.md        ← Skills discovered by all agents</code></pre>
+
+<div class="card">
+<p><strong>AGENTS.md</strong> = how the agent should <em>behave</em> (this standard)<br>
+<strong>mcp-settings.json</strong> = what tools the agent can <em>use</em> (MCP servers)<br>
+<strong>skills/**/SKILL.md</strong> = what the agent can <em>do</em> (<a href="https://agentskills.io">Agent Skills</a>)</p>
+</div>
+
+<h3>Relationship to Agent Skills</h3>
+<p>The <a href="https://agentskills.io">Agent Skills</a> standard defines how agents discover and load <em>capabilities</em> (SKILL.md files). The <code>AGENTS.md</code> standard defines how agents discover and load <em>behavior rules</em>. They complement each other:</p>
+<ul>
+<li><strong>SKILL.md</strong> = what the agent can <em>do</em></li>
+<li><strong>AGENTS.md</strong> = how the agent should <em>behave</em></li>
+<li><strong>mcp-settings.json</strong> = what external tools are available</li>
+</ul>
 
 <!-- CONTRIBUTE -->
 <h2 id="contribute">Contribute</h2>
@@ -293,29 +405,6 @@ ln -sf ../.agents/AGENTS.md .github/copilot-instructions.md</code></pre>
 </div>
 <p><strong>Spec repo:</strong> <a href="https://github.com/nbiish/agents-standard">nbiish/agents-standard</a> (public)</p>
 <p><strong>Site repo:</strong> <a href="https://github.com/nbiish/agentsstandard-dot-com">nbiish/agentsstandard-dot-com</a> (public — issues welcome)</p>
-
-<!-- ADOPT -->
-<h2 id="adopt">Adopt the Standard</h2>
-<p>For agent tool developers:</p>
-<ol>
-<li>Search for <code>~/.agents/AGENTS.md</code> at startup — load as global user rules</li>
-<li>Walk from <code>cwd</code> upward collecting <code>.agents/AGENTS.md</code> files</li>
-<li>Load folder-scoped <code>.agents/AGENTS.md</code> when operating on files in that subtree</li>
-<li>Merge rules: global as base, most specific scope wins conflicts</li>
-</ol>
-
-<p>That's it. Four steps. No dependencies. No schema. No build step. Just markdown files in directories.</p>
-
-<div class="card">
-<p><strong>Why this works:</strong> It follows conventions every developer already knows — <code>.editorconfig</code>, <code>.eslintrc</code>, <code>.gitignore</code>, <code>pyproject.toml</code>. Directory-scoped, cascading, plain text. No new concepts to learn.</p>
-</div>
-
-<h3>Relationship to Agent Skills</h3>
-<p>The <a href="https://agentskills.io">Agent Skills</a> standard defines how agents discover and load <em>capabilities</em> (SKILL.md files). The <code>AGENTS.md</code> standard defines how agents discover and load <em>behavior rules</em>. They complement each other:</p>
-<ul>
-<li><strong>SKILL.md</strong> = what the agent can <em>do</em></li>
-<li><strong>AGENTS.md</strong> = how the agent should <em>behave</em></li>
-</ul>
 
 </main>
 

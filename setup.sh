@@ -54,6 +54,9 @@ echo "  ✓ Pi (native — no symlink needed)"
 # Claude Code
 symlink "${HOME}/.claude/CLAUDE.md" "Claude Code"
 
+# Agy / Gemini CLI
+symlink "${HOME}/.gemini/GEMINI.md" "Agy / Gemini CLI"
+
 # OpenAI Codex
 symlink "${HOME}/.codex/instructions.md" "Codex"
 
@@ -72,9 +75,6 @@ symlink "${HOME}/.cline/cline_rules" "Cline"
 # Roo Code
 symlink "${HOME}/.roo/rules/agents-standard" "Roo Code"
 
-# Gemini CLI
-symlink "${HOME}/.gemini/GEMINI.md" "Gemini CLI"
-
 # Kiro
 symlink "${HOME}/.kiro/kiro.md" "Kiro"
 
@@ -90,6 +90,18 @@ symlink "${HOME}/.junie/guidelines.md" "Junie"
 # Trae
 symlink "${HOME}/.trae/rules/agents-standard" "Trae"
 
+# Crush
+symlink "${HOME}/.config/crush/crush.md" "Crush"
+
+# Hermes Agent
+symlink "${HOME}/.hermes/SOUL.md" "Hermes Agent"
+
+# MiniCC
+symlink "${HOME}/.minicc/AGENTS.md" "MiniCC"
+
+# Deep Agents (dcode)
+symlink "${HOME}/.deepagents/AGENTS.md" "Deep Agents (dcode)"
+
 # Continue (JSON format — can't symlink markdown into JSON)
 echo "  · Continue (JSON config — manual setup required)"
 
@@ -98,6 +110,21 @@ echo "  · Devin (settings UI — no global file to symlink)"
 
 # Aider (YAML format — can't symlink markdown into YAML)
 echo "  · Aider (YAML config — manual setup required)"
+
+# Warp (settings UI — no global file to symlink)
+echo "  · Warp (settings UI — no global file to symlink)"
+
+# Agent Zero (Docker/Web UI — no global file to symlink)
+echo "  · Agent Zero (Docker UI — no global file to symlink)"
+
+# Qwen Code (no global file)
+echo "  · Qwen Code (project-only — use QWEN.md symlink)"
+
+# Codestral (no global file)
+echo "  · Mistral Codestral (project-only — use CODESTRAL.md symlink)"
+
+# fcc-claude (custom env config)
+echo "  · fcc-claude (config via ~/.fcc/.env — no markdown file to symlink)"
 
 echo ""
 echo "Done. Edit ~/.agents/AGENTS.md — all symlinked agents follow your rules."

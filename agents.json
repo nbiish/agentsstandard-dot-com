@@ -1,135 +1,235 @@
 {
   "$schema": "https://agentsstandard.com/schema.json",
   "name": "AGENTS.md",
-  "version": "1.0.0",
-  "description": "Hierarchical configuration standard for AI agents",
-  "scopes": {
-    "global": {
-      "path": "~/.agents/AGENTS.md",
-      "description": "User-level base rules for all projects and agents",
-      "discovery": "Always loaded regardless of working directory"
-    },
-    "project": {
-      "path": ".agents/AGENTS.md",
-      "description": "Team-shared rules committed to version control",
-      "discovery": "At repository root, searched upward from cwd"
-    },
-    "folder": {
-      "path": ".agents/AGENTS.md",
-      "description": "Component-specific rules for subdirectories",
-      "discovery": "In any subdirectory, applies to that subtree"
-    }
-  },
-  "resolution": {
-    "order": ["global", "project", "folder"],
-    "conflict": "most-specific-wins",
-    "inheritance": "extend"
-  },
+  "version": "1.1.0",
+  "description": "Hierarchical configuration standard for AI coding agents — one convention, all agents",
+  "resolution_order": [
+    "~/.agents/AGENTS.md (global base — loaded first)",
+    ".agents/AGENTS.md at repository root (project rules, committed)",
+    ".agents/AGENTS.md in current working directory (folder-specific rules)"
+  ],
+  "conflict_policy": "most-specific-wins (folder > project > global)",
+  "inheritance": "extend",
   "format": "text/markdown",
   "agents": {
     "pi": {
       "file": "AGENTS.md",
       "global_path": "~/.agents/AGENTS.md",
       "project_path": ".agents/AGENTS.md",
-      "native": true
+      "native": true,
+      "mcp_config": { "note": "Uses AGENTS.md convention; MCP servers configured per-project" },
+      "docs_url": "https://github.com/nbiish/agents-standard"
     },
     "claude-code": {
       "file": "CLAUDE.md",
       "global_path": "~/.claude/CLAUDE.md",
       "project_path": "CLAUDE.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "~/.claude.json",
+        "project_path": ".mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://docs.anthropic.com/en/docs/claude-code"
+    },
+    "agy": {
+      "file": "GEMINI.md",
+      "global_path": "~/.gemini/GEMINI.md",
+      "project_path": "GEMINI.md",
+      "native": false,
+      "symlink": true,
+      "note": "Formerly Gemini CLI. Uses same gemini CLI tooling and config paths.",
+      "mcp_config": {
+        "global_path": "~/.gemini/settings.json",
+        "project_path": ".gemini/settings.json",
+        "format": "json"
+      },
+      "docs_url": "https://github.com/google-gemini/gemini-cli"
     },
     "codex": {
-      "file": "instructions.md",
+      "file": "AGENTS.md",
       "global_path": "~/.codex/instructions.md",
       "project_path": "AGENTS.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "note": "Also reads instructions.md globally. Project-level reads AGENTS.md.",
+      "mcp_config": {
+        "global_path": "~/.codex/config.toml",
+        "project_path": null,
+        "format": "toml"
+      },
+      "docs_url": "https://github.com/openai/codex"
     },
     "cursor": {
       "file": ".cursorrules",
       "global_path": "~/.cursor/rules/",
       "project_path": ".cursorrules",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "~/.cursor/mcp.json",
+        "project_path": ".cursor/mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://docs.cursor.com/context/rules-for-ai"
     },
     "github-copilot": {
       "file": "copilot-instructions.md",
       "global_path": null,
       "project_path": ".github/copilot-instructions.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "Settings UI",
+        "project_path": ".github/copilot-mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://docs.github.com/en/copilot/customizing-copilot"
     },
     "windsurf": {
       "file": ".windsurfrules",
       "global_path": "~/.codeium/windsurf/",
       "project_path": ".windsurfrules",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "~/.codeium/windsurf/mcp_config.json",
+        "project_path": null,
+        "format": "json"
+      },
+      "docs_url": "https://docs.windsurf.com/windsurf/cascade"
     },
     "cline": {
       "file": ".clinerules",
       "global_path": "~/.cline/cline_rules",
       "project_path": ".clinerules",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "VS Code globalStorage/cline_mcp_settings.json",
+        "project_path": null,
+        "format": "json"
+      },
+      "docs_url": "https://github.com/cline/cline"
     },
     "roo": {
       "file": ".roorules",
       "global_path": "~/.roo/rules/",
       "project_path": ".roorules",
       "native": false,
-      "symlink": true
-    },
-    "gemini-cli": {
-      "file": "GEMINI.md",
-      "global_path": "~/.gemini/GEMINI.md",
-      "project_path": "GEMINI.md",
-      "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "Extension settings",
+        "project_path": ".roo/mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://docs.roocode.com/features/mcp/using-mcp-in-roo"
     },
     "kiro": {
       "file": "kiro.md",
       "global_path": "~/.kiro/kiro.md",
       "project_path": ".kiro/kiro.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "roles_path": {
+        "global_path": "~/.kiro/steering/",
+        "project_path": ".kiro/steering/"
+      },
+      "mcp_config": {
+        "global_path": "~/.kiro/settings/mcp.json",
+        "project_path": ".kiro/settings/mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://kiro.dev/docs/guides/learn-by-playing/07-extending-kiro-with-mcp/"
+    },
+    "kilocode": {
+      "file": "AGENTS.md",
+      "global_path": null,
+      "project_path": "AGENTS.md",
+      "native": true,
+      "note": "Kilo Code is a VS Code extension / CLI. Native AGENTS.md support at project root. Also reads .kilo/agents/*.md for custom agents.",
+      "roles_path": {
+        "global_path": null,
+        "project_path": ".kilo/agents/"
+      },
+      "mcp_config": {
+        "global_path": "Extension settings",
+        "project_path": "kilo.jsonc",
+        "format": "jsonc"
+      },
+      "docs_url": "https://kilo.ai/docs/customize/agents-md"
     },
     "augment": {
       "file": ".augment-guidelines",
       "global_path": "~/.augment/guidelines",
       "project_path": ".augment-guidelines",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "roles_path": {
+        "global_path": null,
+        "project_path": ".augment/rules/"
+      },
+      "mcp_config": {
+        "global_path": "~/.augment/settings.json",
+        "project_path": null,
+        "format": "json"
+      },
+      "docs_url": "https://docs.augmentcode.com/setup-augment/mcp"
     },
     "goose": {
       "file": "goosehints",
       "global_path": "~/.config/goose/goosehints",
       "project_path": ".goosehints",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "~/.config/goose/config.yaml",
+        "project_path": null,
+        "format": "yaml"
+      },
+      "docs_url": "https://block.github.io/goose/docs"
     },
     "junie": {
       "file": "guidelines.md",
       "global_path": "~/.junie/guidelines.md",
       "project_path": ".junie/guidelines.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "note": "Also reads .junie-rules at project root for coding conventions.",
+      "mcp_config": {
+        "global_path": "~/.junie/mcp.json",
+        "project_path": ".junie/mcp/mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://www.jetbrains.com/help/junie/mcp-settings.html"
     },
     "trae": {
       "file": ".trae/rules/",
       "global_path": "~/.trae/rules/",
       "project_path": ".trae/rules/",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "roles_path": {
+        "global_path": "~/.trae/rules/user_rules.md",
+        "project_path": ".trae/rules/project_rules.md"
+      },
+      "mcp_config": {
+        "global_path": "~/Library/Application Support/Trae/User/mcp.json",
+        "project_path": null,
+        "format": "json"
+      },
+      "docs_url": "https://docs.trae.ai/en/agent"
     },
     "aider": {
       "file": ".aider.conf.yml",
       "global_path": "~/.aider.conf.yml",
       "project_path": ".aider.conf.yml",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "note": "YAML format, not markdown. Symlink still works if Aider reads symlink targets.",
+      "mcp_config": { "note": "No dedicated MCP config file. MCP servers configured via .aider.conf.yml convention scripts." },
+      "docs_url": "https://aider.chat/docs/config.html"
     },
     "continue": {
       "file": "config.json",
@@ -137,21 +237,181 @@
       "project_path": ".continue/config.json",
       "native": false,
       "symlink": true,
-      "note": "JSON format, not markdown"
+      "note": "JSON format, not markdown. MCP servers in .continue/mcpServers/ directory.",
+      "mcp_config": {
+        "global_path": "~/.continue/config.yaml",
+        "project_path": ".continue/mcpServers/",
+        "format": "yaml"
+      },
+      "docs_url": "https://docs.continue.dev/customize/deep-dives/mcp"
     },
     "codestral": {
       "file": "CODESTRAL.md",
       "global_path": null,
       "project_path": "CODESTRAL.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": { "note": "No dedicated MCP config file. Mistral API key in environment variables." },
+      "docs_url": "https://docs.mistral.ai/agents/mcp/"
     },
     "qwen-code": {
       "file": "QWEN.md",
       "global_path": null,
       "project_path": "QWEN.md",
       "native": false,
-      "symlink": true
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "~/.qwen/settings.json",
+        "project_path": ".qwen/settings.json",
+        "format": "json"
+      },
+      "docs_url": "https://qwenlm.github.io/qwen-code-docs/en/users/features/mcp/"
+    },
+    "devin": {
+      "file": "instructions.md",
+      "global_path": null,
+      "project_path": ".devin/instructions.md",
+      "native": false,
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "Settings UI / MCP Marketplace",
+        "project_path": null,
+        "format": null
+      },
+      "docs_url": "https://docs.devin.ai/work-with-devin/mcp"
+    },
+    "warp": {
+      "file": "warp.md",
+      "global_path": null,
+      "project_path": "WARP.md",
+      "native": false,
+      "symlink": true,
+      "note": "Compatible with AGENTS.md, CLAUDE.md, .cursorrules. Also reads .warp/ directory.",
+      "roles_path": {
+        "global_path": null,
+        "project_path": ".warp/"
+      },
+      "mcp_config": {
+        "global_path": "Settings UI (Warp Drive → MCP Servers)",
+        "project_path": ".warp/mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://github.com/warpdotdev/Warp"
+    },
+    "crush": {
+      "file": "AGENTS.md",
+      "global_path": "~/.config/crush/crush.md",
+      "project_path": "CRUSH.md",
+      "native": false,
+      "symlink": true,
+      "mcp_config": {
+        "global_path": "~/.config/crush/crush.json",
+        "project_path": "crush.json",
+        "format": "json"
+      },
+      "docs_url": "https://github.com/charmbracelet/crush"
+    },
+    "opencode": {
+      "file": "AGENTS.md",
+      "global_path": null,
+      "project_path": "AGENTS.md",
+      "native": true,
+      "note": "Native AGENTS.md support. Also reads .cursorrules, CLAUDE.md, .github/copilot-instructions.md via contextPaths.",
+      "roles_path": {
+        "global_path": null,
+        "project_path": ".opencode/agent/"
+      },
+      "mcp_config": {
+        "global_path": "~/.config/opencode/opencode.json",
+        "project_path": "opencode.json",
+        "format": "jsonc"
+      },
+      "docs_url": "https://github.com/anomalyco/opencode"
+    },
+    "dcode": {
+      "file": "AGENTS.md",
+      "global_path": "~/.deepagents/AGENTS.md",
+      "project_path": ".deepagents/AGENTS.md",
+      "native": true,
+      "note": "Deep Agents Code by LangChain. Native AGENTS.md support. Also reads project-root AGENTS.md.",
+      "mcp_config": {
+        "global_path": "~/.deepagents/.mcp.json",
+        "project_path": null,
+        "format": "json"
+      },
+      "docs_url": "https://docs.langchain.com/oss/javascript/deepagents/code/overview"
+    },
+    "codewhale": {
+      "file": "AGENTS.md",
+      "global_path": null,
+      "project_path": "AGENTS.md",
+      "native": false,
+      "symlink": true,
+      "note": "CodeWhale by Hmbown. DeepSeek-first terminal agent with ACP support. Reads AGENTS.md at project root.",
+      "docs_url": "https://github.com/Hmbown/CodeWhale"
+    },
+    "hermes-agent": {
+      "file": "AGENTS.md",
+      "global_path": "~/.hermes/SOUL.md",
+      "project_path": "AGENTS.md",
+      "native": false,
+      "symlink": true,
+      "note": "Hermes Agent by NousResearch. SOUL.md is the global identity file. Also reads AGENTS.md per project.",
+      "mcp_config": {
+        "global_path": "~/.hermes/config.yaml",
+        "project_path": null,
+        "format": "yaml"
+      },
+      "docs_url": "https://github.com/NousResearch/hermes-agent"
+    },
+    "agent-zero": {
+      "file": "AGENTS.md",
+      "global_path": null,
+      "project_path": "AGENTS.md",
+      "native": false,
+      "symlink": true,
+      "note": "Agent Zero (a0) by agent0ai. Docker-based with Web UI. Per-project config in .a0proj/ directory.",
+      "roles_path": {
+        "global_path": null,
+        "project_path": ".a0proj/instructions/"
+      },
+      "mcp_config": { "note": "Docker/Web UI based. Use Agent Zero Settings UI for MCP configuration." },
+      "docs_url": "https://github.com/agent0ai/agent-zero"
+    },
+    "mini": {
+      "file": "AGENTS.md",
+      "global_path": "~/.minicc/AGENTS.md",
+      "project_path": "AGENTS.md",
+      "native": false,
+      "symlink": true,
+      "note": "MiniCC — a minimal AI coding agent CLI. Reads AGENTS.md globally and per project.",
+      "mcp_config": {
+        "global_path": "~/.minicc/mcp.json",
+        "project_path": ".minicc/mcp.json",
+        "format": "json"
+      },
+      "docs_url": "https://github.com/TokenRollAI/minicc"
+    },
+    "zed": {
+      "file": "AGENTS.md",
+      "global_path": null,
+      "project_path": "AGENTS.md",
+      "native": true,
+      "note": "Zed IDE. Reads AGENTS.md, .cursorrules, and .zed/ configuration. Native AGENTS.md support.",
+      "roles_path": {
+        "global_path": null,
+        "project_path": ".zed/"
+      },
+      "docs_url": "https://zed.dev/docs"
+    },
+    "fcc-claude": {
+      "file": "AGENTS.md",
+      "global_path": "~/.fcc/.env",
+      "project_path": null,
+      "native": false,
+      "symlink": true,
+      "note": "FreeCodeCamp Claude — ACP agent routing through fcc-server. Global config via ~/.fcc/.env with model routing. Project rules via AGENTS.md.",
+      "docs_url": "https://github.com/nbiish/agents-standard"
     }
   }
 }
