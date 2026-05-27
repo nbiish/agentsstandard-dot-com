@@ -1,0 +1,14 @@
+{
+  "name": "agents-standard",
+  "version": "1.1.0",
+  "description": "CLI tool for managing the AGENTS.md standard — symlink your global rules to all agent config files with a checkbox TUI",
+  "bin": {
+    "agents-standard": "./index.js",
+    "agents": "./index.js"
+  },
+  "files": ["index.js"],
+  "engines": { "node": ">=16" },
+  "license": "MIT",
+  "repository": "https://github.com/nbiish/agents-standard",
+  "keywords": ["agents", "ai", "llm", "coding-agent", "configuration", "standard"]
+}

@@ -3,11 +3,34 @@
   "name": "AGENTS.md",
   "version": "1.1.0",
   "description": "Hierarchical configuration standard for AI coding agents — one convention, all agents",
+  "loading_model": "concatenation",
+  "loading_description": "Each tier's AGENTS.md is concatenated (not replaced). Global rules form the base identity and security posture. Each subsequent tier appends context-specific rules. CLAUDE.md, GEMINI.md, and other agent-specific files remain as independent context files read by their respective tools.",
   "resolution_order": [
-    "~/.agents/AGENTS.md (global base — loaded first)",
-    ".agents/AGENTS.md at repository root (project rules, committed)",
-    ".agents/AGENTS.md in current working directory (folder-specific rules)"
+    "~/.agents/AGENTS.md (global base — loaded first, always loaded regardless of cwd)",
+    ".agents/AGENTS.md at repository root (project rules, committed, concatenated after global)",
+    ".agents/AGENTS.md in current working directory (folder-specific rules, concatenated last)"
   ],
+  "agent_specific_files": {
+    "CLAUDE.md": "Independent context file — Claude Code reads this directly. Not replaced by AGENTS.md unless user symlinks.",
+    "GEMINI.md": "Independent context file — Agy/Gemini CLI reads this directly. Not replaced by AGENTS.md unless user symlinks.",
+    "note": "Agent-specific files remain standalone. Users opt in to symlink them to AGENTS.md via the agents-standard CLI. The standard exists so tool creators don't have to manage multiple rules files — they just read their own file (or AGENTS.md natively) and the standard handles the rest."
+  },
+  "env_vars": {
+    "AGENTS_DEPTH": {
+      "description": "Controls how many directory levels of .agents/AGENTS.md to read from cwd upward",
+      "default": 3,
+      "values": {
+        "1": "~/.agents/AGENTS.md only (global rules, no project/folder)",
+        "2": "global + project root .agents/AGENTS.md",
+        "3": "global + project root + cwd folder .agents/AGENTS.md (default)",
+        "4+": "global + project root + all intermediate directories to cwd"
+      }
+    },
+    "AGENTS_PATH": {
+      "description": "Override the global AGENTS.md path",
+      "default": "~/.agents/AGENTS.md"
+    }
+  },
   "conflict_policy": "most-specific-wins (folder > project > global)",
   "inheritance": "extend",
   "format": "text/markdown",

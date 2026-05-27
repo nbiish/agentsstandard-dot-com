@@ -88,25 +88,64 @@ Team-shared rules committed to version control. Project conventions, tech stack,
 Component-specific rules. Frontend conventions in <code>src/</code>, API patterns in <code>api/</code>, test standards in <code>tests/</code>.</p>
 </div>
 
+<h3>Loading Model: Concatenation</h3>
+<p>Each tier's <code>AGENTS.md</code> is <strong>concatenated</strong> into the agent's context — not replaced. Global rules define identity and security posture. Each subsequent tier <em>appends</em> more specific rules. Your security practices in <code>~/.agents/AGENTS.md</code> always apply; your project conventions in <code>.agents/AGENTS.md</code> build on top.</p>
+
+<div class="card">
+<p><strong>~/.agents/AGENTS.md</strong> — Loaded first, always. This is where you define agent identity, global security rules, coding preferences, and safety policies. <em>Every</em> agent session starts here. This is your immutable base layer.</p>
+</div>
+
+<div class="card">
+<p><strong>.agents/AGENTS.md</strong> at repo root — Concatenated next. Team-shared project conventions, tech stack, code style. Committed to version control. This is where your team agrees on how code gets written.</p>
+</div>
+
+<div class="card">
+<p><strong>.agents/AGENTS.md</strong> in subdirectory — Concatenated last. Component-specific rules. Frontend rules in <code>src/</code>, API rules in <code>api/</code>, test rules in <code>tests/</code>. This is where specific subsystems diverge.</p>
+</div>
+
 <h3>Resolution Order</h3>
 <ol>
 <li>Load <code>~/.agents/AGENTS.md</code> (global — always loaded first regardless of working directory)</li>
-<li>Walk from repository root, load <code>.agents/AGENTS.md</code> (project-level rules, committed to VC)</li>
-<li>For the target file's directory, walk upward from <code>cwd</code> and load any <code>.agents/AGENTS.md</code> found (folder-specific rules)</li>
-<li>Merge all rules: global as base, each layer adding constraints</li>
+<li>Find <code>.agents/AGENTS.md</code> at repository root (project-level rules, committed)</li>
+<li>Walk from <code>cwd</code> upward, collect any <code>.agents/AGENTS.md</code> files in intermediate directories</li>
+<li><strong>Concatenate</strong> all files in order: global → project → deepest folder</li>
 <li>Conflicting rules: most specific scope wins (folder > project > global)</li>
 </ol>
+
+<h3>Agent-Specific Files (CLAUDE.md, GEMINI.md, etc.)</h3>
+<p>Files like <code>CLAUDE.md</code>, <code>GEMINI.md</code>, <code>.cursorrules</code> remain as <strong>independent context files</strong> read directly by their respective tools. The AGENTS.md standard doesn't replace them — it gives tool creators <em>one less thing to build</em>. If a tool already reads <code>AGENTS.md</code> natively (Pi, Kilo Code, OpenCode, dcode, Zed), great. If not, users can symlink via the CLI. Either way, tool creators focus on their agent harness, not rules file management.</p>
+
+<h3>AGENTS_DEPTH</h3>
+<p>Control how many directory levels of <code>.agents/AGENTS.md</code> are loaded with the <code>AGENTS_DEPTH</code> environment variable:</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Value</th><th>Behavior</th></tr></thead>
+<tbody>
+<tr><td><code>1</code></td><td><code>~/.agents/AGENTS.md</code> only — global rules, no project or folder tiers</td></tr>
+<tr><td><code>2</code></td><td>Global + project root <code>.agents/AGENTS.md</code></td></tr>
+<tr><td><code>3</code></td><td>Global + project root + cwd folder (default)</td></tr>
+<tr><td><code>4+</code></td><td>Global + project root + all intermediate directories up to cwd (deep repository rules)</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code class="language-bash"># Set in your shell profile
+export AGENTS_DEPTH=3    # default: global + project + folder
+
+# Or per-project
+export AGENTS_DEPTH=5    # deep repositories with nested subdirectories</code></pre>
 
 <h3>Inheritance</h3>
 <p>Rules cascade and <strong>extend</strong>, not replace. This is the same model as <code>.editorconfig</code>, <code>.eslintrc</code>, and <code>.gitignore</code> — every developer already understands it.</p>
 
-<pre><code>~/.agents/AGENTS.md              ← global (loaded first)
-└── project/.agents/AGENTS.md    ← project (extends global)
-    ├── src/.agents/AGENTS.md    ← folder (extends project + global)
-    ├── api/.agents/AGENTS.md    ← folder (extends project + global)
-    └── tests/.agents/AGENTS.md  ← folder (extends project + global)</code></pre>
+<pre><code>~/.agents/AGENTS.md              ← global (loaded first, always)
+└── project/.agents/AGENTS.md    ← project (concatenated after global)
+    ├── src/.agents/AGENTS.md    ← folder (concatenated after project)
+    ├── api/.agents/AGENTS.md    ← folder (concatenated after project)
+    └── tests/.agents/AGENTS.md  ← folder (concatenated after project)</code></pre>
 
-<p>When an agent resolves rules for a file at <code>project/src/components/Button.tsx</code>, it loads all three in order: global → project → <code>src/</code> folder. Each layer adds constraints. None discard the previous.</p>
+<p>When an agent resolves rules for <code>project/src/components/Button.tsx</code>, the context is: <code>~/.agents/AGENTS.md</code> + <code>project/.agents/AGENTS.md</code> + <code>src/.agents/AGENTS.md</code> — all concatenated. Each layer <em>adds</em> constraints. None discard the previous. Your security rules in global always apply. Your React conventions in <code>src/</code> only apply to files in that subtree.</p>
 
 <h3>File Format</h3>
 <p>Plain <code>Markdown</code>. No <code>YAML</code> frontmatter. No schema. Just write rules.</p>
