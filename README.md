@@ -35,6 +35,8 @@ This repo serves structured data for agents, crawlers, and tools to intake the s
 |------|-----------|--------------|
 | [`llms.txt`](llms.txt) | Plain text summary of the spec + agent config map | LLMs, agents, crawlers |
 | [`agents.json`](agents.json) | Structured JSON: scopes, resolution rules, all 30+ agent config paths + MCP locations | Tools, scripts, agent frameworks |
+| [`providers.json`](providers.json) | Structured JSON: 15 LLM providers, API endpoints, auth patterns, referral codes | Tools, scripts, agent frameworks |
+| [`mcp-settings.example.json`](mcp-settings.example.json) | Example universal MCP config for ~/.agents/mcp-settings.json | Users, agents |
 | [`index.html`](index.html) | The full website | Humans |
 | [`setup.sh`](setup.sh) | Symlink `~/.agents/AGENTS.md` to all agent configs | Users setting up |
 
@@ -117,6 +119,31 @@ Every agent's MCP server configuration location:
 | MiniCC | `~/.minicc/mcp.json` | `.minicc/mcp.json` | JSON |
 | Warp | Warp Drive UI | `.warp/mcp.json` | JSON |
 | Hermes Agent | `~/.hermes/config.yaml` | — | YAML |
+
+## LLM Providers
+
+Every agent needs a model. Provider API endpoints, auth, free tiers, and referral links:
+
+| Provider | Key Models | API Base URL | Auth Env Var | Free Tier |
+|----------|-----------|-------------|--------------|-----------|
+| Anthropic | Claude Opus 4.7, Sonnet 4.6 | `https://api.anthropic.com/v1` | `ANTHROPIC_API_KEY` | — |
+| OpenAI | GPT-5.4, GPT-5.3, o4-mini | `https://api.openai.com/v1` | `OPENAI_API_KEY` | — |
+| Google Gemini | Gemini 2.5 Pro, Flash | `https://generativelanguage.googleapis.com/v1beta` | `GEMINI_API_KEY` | Flash free |
+| DeepSeek | DeepSeek-V4, V3 | `https://api.deepseek.com/v1` | `DEEPSEEK_API_KEY` | — |
+| OpenRouter | 250+ models | `https://openrouter.ai/api/v1` | `OPENROUTER_API_KEY` | Free models |
+| z.ai | GLM-5.1, GLM-4.7 | `https://api.z.ai/api/coding/paas/v4` | `ZAI_API_KEY` | — |
+| Wafer AI | GLM-5.1, various | `https://api.wafer.ai/v1` | `WAFER_API_KEY` | — |
+| Mistral AI | Mistral Large 3, Codestral | `https://api.mistral.ai/v1` | `MISTRAL_API_KEY` | Free (rated) |
+| Groq | Llama 4, Mixtral | `https://api.groq.com/openai/v1` | `GROQ_API_KEY` | Free 30r/m |
+| xAI | Grok-4, Grok-3 | `https://api.x.ai/v1` | `XAI_API_KEY` | — |
+| Together AI | Llama 4, DeepSeek | `https://api.together.xyz/v1` | `TOGETHER_API_KEY` | $1 credit |
+| Fireworks AI | Llama 4, Qwen | `https://api.fireworks.ai/inference/v1` | `FIREWORKS_API_KEY` | 100r/d |
+| Ollama (local) | Llama 4, Qwen 3 | `http://localhost:11434/v1` | — | Free |
+| LM Studio (local) | Any GGUF | `http://localhost:1234/v1` | — | Free |
+
+**Referral links:** [z.ai](https://z.ai/subscribe?ic=B50UECNB9T) (code `B50UECNB9T`) · [OpenCode AI](https://opencode.ai/go?ref=APBJCPVXC1) (code `APBJCPVXC1`) · Wafer AI (code `8b2ul8o0`)
+
+Full structured data: [`providers.json`](providers.json)
 
 ## The Full ~/.agents/ Directory
 
