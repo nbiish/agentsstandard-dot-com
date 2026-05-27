@@ -105,7 +105,7 @@ function render() {
   clearScreen();
 
   // Header
-  process.stdout.write(`${C.bold}${C.cyan}  agents-standard${C.reset}  ${C.dim}v1.1.0${C.reset}\n`);
+  process.stdout.write(`${C.bold}${C.cyan}  agents-standard${C.reset}  ${C.dim}v1.3.0${C.reset}\n`);
   process.stdout.write(`  ${C.dim}Global:${C.reset} ${globalPath.replace(HOME, '~')}\n`);
   process.stdout.write(`  ${C.dim}Depth:${C.reset}  ${C.yellow}${depth}${C.reset} (${depthDesc(depth)})\n`);
   process.stdout.write(`  ${C.dim}────────────────────────────────────────────────────${C.reset}\n\n`);
@@ -397,6 +397,12 @@ function main() {
     g          Change global AGENTS.md path
     Enter      Apply changes (when on "Apply changes" bar)
     q          Quit
+
+  ${C.bold}Project setup:${C.reset}
+    .agents/AGENTS.md           Project base rules (committed)
+    AGENTS.md at repo root      Project active / PRD rules (symlinked)
+    .agents/mcp-settings.json   Project MCP servers
+    .agents/skills/**/SKILL.md  Project skills
 `);
     process.exit(0);
   }

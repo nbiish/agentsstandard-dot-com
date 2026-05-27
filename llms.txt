@@ -1,24 +1,23 @@
 # agentsstandard.com
 
-> The AGENTS.md hierarchical configuration standard for AI agents. One file convention, three scopes, all agents.
+> The AGENTS.md hierarchical configuration standard for AI agents. One file convention, four scopes, all agents.
+> Note: This project spans two repositories: the specification/CLI repository (nbiish/agents-standard) and the website/documentation repository (nbiish/agentsstandard-dot-com). We actively work on both repositories to maintain consistency between the online docs and the core specifications/CLI tools.
 
 ## The Standard
 
-One file: `AGENTS.md`. Three scopes:
+The standard unifies project instructions by separating **what/why** (Project PRD) from **how** (Behavioral Rules):
 
-1. **Global**: `~/.agents/AGENTS.md` — User-level base rules for all projects, all agents (loaded first)
-2. **Project**: `.agents/AGENTS.md` at repo root — Team-shared rules committed to version control
-3. **Folder**: `.agents/AGENTS.md` in any subdirectory — Component-specific rules
-
-Rules cascade and extend, not replace. Same model as .editorconfig, .eslintrc, .gitignore.
+* **`llms.txt` (Project PRD)**: Located at `{project_root}/llms.txt`. Defines the codebase context, active product requirements, tech stack, API definitions, and roadmap (the "What" and "Why").
+* **`AGENTS.md` (Behavioral Cascade)**: Cascades across four scopes. Defines the guidelines, safety constraints, coding style preferences, and CLI commands the agent must follow (the "How").
 
 ## Resolution Order
 
-1. Load `~/.agents/AGENTS.md` (global — always loaded first)
-2. Walk from repo root to load `.agents/AGENTS.md` (project rules)
-3. Walk from cwd upward and load `.agents/AGENTS.md` files (folder rules)
-4. Merge: global as base, each layer adds constraints
-5. Conflicts: most specific scope wins (folder > project > global)
+1. Load `~/.agents/AGENTS.md` (global base — loaded first, user safety/preferences)
+2. Load `{project_root}/llms.txt` (project PRD — loaded second, functional requirements/tech stack)
+3. Load `{project_root}/.agents/AGENTS.md` (project base rules — loaded third, committed guidelines)
+4. Load `{project_root}/AGENTS.md` (project active rules — loaded fourth, active constraints, symlinked)
+5. Load `{cwd}/AGENTS.md` if cwd is within project boundary (folder-specific rules — loaded last, component overrides)
+6. Merge: global as base, each layer adds constraints. Most specific rules win (folder > active > project base > global)
 
 ## File Format
 
@@ -28,7 +27,7 @@ Plain Markdown. No YAML frontmatter. No schema. Just write rules.
 
 | Agent | Config File | Global Path | Project Path | Native |
 |-------|------------|-------------|--------------|--------|
-| Pi | AGENTS.md | ~/.agents/AGENTS.md | .agents/AGENTS.md | Yes |
+| Pi | AGENTS.md | ~/.agents/AGENTS.md | AGENTS.md | Yes |
 | Claude Code | CLAUDE.md | ~/.claude/CLAUDE.md | CLAUDE.md | — |
 | Agy / Gemini CLI | GEMINI.md | ~/.gemini/GEMINI.md | GEMINI.md | — |
 | OpenAI Codex | AGENTS.md | ~/.codex/instructions.md | AGENTS.md | — |
@@ -117,12 +116,24 @@ See setup script at: https://github.com/nbiish/agents-standard
 ## The Full ~/.agents/ Directory
 
 ```
+# Global ~/.agents/ (behavior + tooling)
 ~/.agents/
-├── AGENTS.md              ← Behavior rules (this standard)
+├── AGENTS.md              ← Behavior rules (global base, loaded first)
 ├── mcp-settings.json      ← MCP server configs (universal)
 └── skills/                ← Agent Skills (capabilities)
     └── **/SKILL.md        ← Skills discovered by all agents
 ```
+
+```
+# Project .agents/ (tooling + project base rules)
+{project}/.agents/
+├── AGENTS.md              ← Project base rules (committed rules for tech stack, deployment)
+├── mcp-settings.json      ← Project-specific MCP servers
+└── skills/                ← Project-specific agent skills
+    └── **/SKILL.md
+```
+
+Note: Project base rules go in {project}/.agents/AGENTS.md, and project active/PRD rules (commonly modified task/feature rules) go in {project}/AGENTS.md at the repo root.
 
 ## Relationship to Agent Skills
 

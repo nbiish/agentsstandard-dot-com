@@ -6,26 +6,35 @@
 
 ## The Standard
 
-One file: `AGENTS.md`. Three scopes. All agents.
+One file: `AGENTS.md`. Four scopes. All agents.
 
 ```
-~/.agents/AGENTS.md              ← Global (user rules, loaded first)
-├── .agents/AGENTS.md            ← Project (team rules, committed)
-│   ├── src/.agents/AGENTS.md    ← Folder (component rules)
-│   └── api/.agents/AGENTS.md    ← Folder (component rules)
+~/.agents/AGENTS.md              ← Global Base (user preferences/security, loaded first)
+├── .agents/AGENTS.md            ← Project Base (committed rules for tech stack, deployment)
+├── AGENTS.md                    ← Project Active / PRD (commonly modified task/feature rules)
+│   ├── src/AGENTS.md            ← Folder (component rules, optional)
+│   └── api/AGENTS.md            ← Folder (component rules, optional)
 ```
 
 Rules cascade and extend, not replace. Same model as `.editorconfig`, `.eslintrc`, `.gitignore`.
 
 Full specification: **[nbiish/agents-standard](https://github.com/nbiish/agents-standard)**
 
+## Separation of Concerns: llms.txt (PRD) vs AGENTS.md (Rules)
+
+The standard unifies project instructions by separating **what/why** from **how**:
+* **`llms.txt` (Project PRD)**: Located at `{project_root}/llms.txt`. Defines the codebase context, active product requirements, tech stack, API definitions, and roadmap (the "What" and "Why").
+* **`AGENTS.md` (Behavioral Cascade)**: Cascades across four scopes. Defines the guidelines, safety constraints, coding style preferences, and CLI commands the agent must follow (the "How").
+
 ## Resolution Order
 
-1. `~/.agents/AGENTS.md` — loaded first (global base)
-2. `.agents/AGENTS.md` at repository root — project rules (committed)
-3. `.agents/AGENTS.md` in current working directory — folder-specific rules
+1. `~/.agents/AGENTS.md` — loaded first (global base, user-specific safety/preferences)
+2. `llms.txt` at repository root — project PRD (loaded second, functional requirements/tech stack)
+3. `.agents/AGENTS.md` at repository root — project base rules (loaded third, committed guidelines)
+4. `AGENTS.md` at repository root — project active rules (loaded fourth, active constraints, symlinked)
+5. `AGENTS.md` in current working directory — folder-specific rules (loaded last, folder overrides)
 
-Conflicts: most specific scope wins (folder > project > global).
+Conflicts: most specific rules win (folder > active > project base > global).
 
 ## Machine-Readable Files
 
@@ -59,7 +68,7 @@ Every major agent's config file, global path, and project path — verified agai
 
 | Agent | Config File | Global Path | Project Path | Native? |
 |-------|------------|-------------|--------------|---------|
-| Pi | `AGENTS.md` | `~/.agents/AGENTS.md` | `.agents/AGENTS.md` | Yes |
+| Pi | `AGENTS.md` | `~/.agents/AGENTS.md` | `AGENTS.md` | Yes |
 | Claude Code | `CLAUDE.md` | `~/.claude/CLAUDE.md` | `CLAUDE.md` | — |
 | Agy / Gemini CLI | `GEMINI.md` | `~/.gemini/GEMINI.md` | `GEMINI.md` | — |
 | OpenAI Codex | `AGENTS.md` | `~/.codex/instructions.md` | `AGENTS.md` | — |
@@ -148,12 +157,24 @@ Full structured data: [`providers.json`](providers.json)
 ## The Full ~/.agents/ Directory
 
 ```
+# Global ~/.agents/ (behavior + tooling)
 ~/.agents/
-├── AGENTS.md              ← Behavior rules (global → project → folder cascade)
+├── AGENTS.md              ← Behavior rules (global base, loaded first)
 ├── mcp-settings.json      ← MCP server configs (all agents read from here)
 └── skills/                ← Agent Skills (reusable capabilities)
     └── **/SKILL.md        ← Skills discovered by all agents
 ```
+
+```
+# Project .agents/ (tooling + project base rules)
+{project}/.agents/
+├── AGENTS.md              ← Project base rules (committed rules for tech stack, deployment)
+├── mcp-settings.json      ← Project-specific MCP servers
+└── skills/                ← Project-specific agent skills
+    └── **/SKILL.md
+```
+
+> **Note:** Project base rules go in `{project}/.agents/AGENTS.md`, and project active/PRD rules (commonly modified task/feature rules) go in `{project}/AGENTS.md` at the repo root.
 
 - **AGENTS.md** = how the agent should *behave* (this standard)
 - **mcp-settings.json** = what tools the agent can *use* (MCP servers)

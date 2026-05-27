@@ -1,7 +1,7 @@
 {
   "$schema": "https://agentsstandard.com/schema.json",
   "name": "AGENTS.md",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "Hierarchical configuration standard for AI coding agents — one convention, all agents",
   "loading_model": "scoped-concatenation",
   "loading_description": "AGENTS.md files are concatenated (not replaced) within a bounded scope. The project root (inherited terminal cwd) acts as a ceiling — agents never traverse above it. Global rules form the immutable base. Each tier within the project appends context-specific rules.",
@@ -11,28 +11,56 @@
     "env_var": "AGENTS_ROOT",
     "note": "If AGENTS_ROOT is set, it overrides shell-inherited cwd detection."
   },
+  "project_prd": {
+    "file": "llms.txt",
+    "location": "{project_root}/llms.txt",
+    "description": "The globalized Project Requirements Document (PRD) detailing active goals, architecture, feature requirements, and project scope (the 'What' and 'Why'). Loaded as the primary project context layer.",
+    "relationship_to_rules": "llms.txt defines what is being built, while AGENTS.md files define the rules and behavior constraints of how the agent should behave."
+  },
   "traversal_rules": {
     "never_go_up": "Agents must never traverse above the detected project root. If the user cds .. past the project root, only ~/.agents/AGENTS.md is loaded — no parent directory AGENTS.md files are picked up.",
-    "always_read_cwd": "Within the project boundary, the current working directory's AGENTS.md is always read (if it exists). This ensures folder-specific rules apply wherever the agent operates.",
-    "ceiling": "The project root AGENTS.md is the highest project-level file loaded. ~/.agents/AGENTS.md is always the highest overall (global ceiling)."
+    "always_read_cwd": "Within the project boundary, the current working directory's AGENTS.md is always read (if it exists). AGENTS.md lives at directory root, inside subdirectories for component rules, or in .agents/ for project base rules.",
+    "ceiling": "The project root .agents/AGENTS.md and root AGENTS.md are the highest project-level files loaded. ~/.agents/AGENTS.md is the global ceiling."
   },
   "resolution_order": [
-    "~/.agents/AGENTS.md (global base — always loaded first, immutable, IS the global standard)",
+    "~/.agents/AGENTS.md (global base — loaded first, user-specific safety/security/preferences)",
     "Detect project root via inherited terminal cwd or $AGENTS_ROOT",
-    "{project_root}/.agents/AGENTS.md (project rules, committed, concatenated after global)",
-    "{cwd}/.agents/AGENTS.md for any subdirectory within project boundary (folder rules, loaded last)"
+    "{project_root}/llms.txt (project PRD — loaded second, functional requirements, scope, tech stack)",
+    "{project_root}/.agents/AGENTS.md (project base — loaded third, committed rules, static architecture, guidelines)",
+    "{project_root}/AGENTS.md (project active rules — loaded fourth, active task/feature constraints, symlinked by CLAUDE.md)",
+    "{cwd}/AGENTS.md for any subdirectory within project boundary (folder/component rules, loaded last)"
   ],
   "canonical_global_path": {
     "primary": "~/.agents/AGENTS.md",
-    "note": "Some tools currently use ~/.config/AGENTS.md. The standard defines ~/.agents/AGENTS.md as the canonical global path. Tools using ~/.config/ should migrate to ~/.agents/ to join ~/.agents/mcp-settings.json and ~/.agents/skills/**/SKILL.md under one directory. The agents-standard CLI handles migration."
+    "note": "Some tools currently use ~/.config/AGENTS.md. The standard defines ~/.agents/AGENTS.md as the canonical global path. Tools using ~/.config/ should migrate to ~/.agents/ to join ~/.agents/mcp-settings.json and ~/.agents/skills/**/SKILL.md under one directory. At the project level, .agents/ is for tooling configuration and project base rules (in .agents/AGENTS.md). The root-level AGENTS.md holds active task/PRD rules for easy modification and native tool compatibility. The agents-standard CLI handles migration."
   },
   "dual_layer_mcp": {
     "global": "~/.agents/mcp-settings.json — MCP servers available across all agents and IDEs. Shared foundation.",
     "agent_specific": "Each agent/IDE can also read its own MCP config file (e.g. ~/.claude.json, .cursor/mcp.json) for finer customization. Agent-specific configs extend — not replace — the global set.",
     "note": "This dual-layer model prevents users from duplicating MCP configs across every agent. Shared servers go in ~/.agents/mcp-settings.json. Agent-specific extras go in the agent's own config."
   },
+  "agents_directory": {
+    "description": "The .agents/ directory holds tooling configuration and project base rules. AGENTS.md lives at directory root for active task instructions, and inside .agents/ for project base rules.",
+    "global": {
+      "path": "~/.agents/",
+      "contents": {
+        "AGENTS.md": "Global behavior rules (this standard)",
+        "mcp-settings.json": "MCP server configs shared across all agents",
+        "skills/": "Global agent skills (**/SKILL.md)"
+      }
+    },
+    "project": {
+      "path": "{project_root}/.agents/",
+      "contents": {
+        "AGENTS.md": "Project base rules (tech stack, deployment, committed guidelines)",
+        "mcp-settings.json": "Project-specific MCP server configs",
+        "skills/": "Project-specific agent skills (**/SKILL.md)"
+      },
+      "note": "Project base rules live in .agents/AGENTS.md. Project active task/PRD rules go in {project_root}/AGENTS.md — visible at repo root, compatible with how 23+ tools already read rules."
+    }
+  },
   "singular_rules_fallback": {
-    "description": "If an agent only supports a single rules file, it should use either ~/.agents/AGENTS.md (global) or the current working directory's AGENTS.md (project). These are the two canonical locations.",
+    "description": "If an agent only supports a single rules file, it should use either ~/.agents/AGENTS.md (global) or the project root AGENTS.md. These are the two canonical locations.",
     "note": "Tools that only read one file are first-class citizens — they get the global base or cwd rules without needing to implement the full cascade."
   },
   "agent_specific_files": {
@@ -42,13 +70,13 @@
   },
   "env_vars": {
     "AGENTS_DEPTH": {
-      "description": "Controls how many directory levels of .agents/AGENTS.md to read from project root downward (never upward)",
+      "description": "Controls how many directory levels of AGENTS.md to read from project root downward (never upward)",
       "default": 3,
       "values": {
         "1": "~/.agents/AGENTS.md only (global rules, no project/folder)",
-        "2": "global + project root .agents/AGENTS.md",
-        "3": "global + project root + cwd sub-folder .agents/AGENTS.md (default)",
-        "4+": "global + project root + all intermediate subdirectories from project root to cwd"
+        "2": "global + project base .agents/AGENTS.md",
+        "3": "global + project base .agents/AGENTS.md + project root AGENTS.md (default)",
+        "4+": "global + project base .agents/AGENTS.md + project root AGENTS.md + cwd sub-folder AGENTS.md"
       }
     },
     "AGENTS_PATH": {
@@ -67,7 +95,7 @@
     "pi": {
       "file": "AGENTS.md",
       "global_path": "~/.agents/AGENTS.md",
-      "project_path": ".agents/AGENTS.md",
+      "project_path": "AGENTS.md",
       "native": true,
       "mcp_config": { "note": "Uses AGENTS.md convention; MCP servers configured per-project" },
       "docs_url": "https://github.com/nbiish/agents-standard"

@@ -69,38 +69,56 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color
 
 <!-- SPECIFICATION -->
 <h2 id="spec">Specification</h2>
-<p>One file convention. Three scopes. All agents.</p>
+<p>One file convention. Five-tier loading. All agents.</p>
 
-<p>Agent tools each invented their own config files — <code>CLAUDE.md</code>, <code>.cursorrules</code>, <code>AGENTS.md</code>, <code>.clinerules</code>, <code>copilot-instructions.md</code>. This standard unifies them with a single <code>AGENTS.md</code> file that cascades across three scopes:</p>
+<p>The standard unifies project instructions by separating <strong>what/why</strong> (Project PRD) from <strong>how</strong> (Behavioral Rules):</p>
 
 <div class="card">
-<p><strong>Global</strong> — <code>~/.agents/AGENTS.md</code><br>
-User-level base rules. Applies to all projects, all agents. Personal preferences, identity, safety policy. <strong>Loaded first.</strong></p>
+<p><strong>Project PRD</strong> — <code>llms.txt</code> at repository root<br>
+The globalized Project Requirements Document (PRD) detailing active goals, architecture, tech stack, and scope. <strong>Loaded second.</strong></p>
 </div>
 
 <div class="card">
-<p><strong>Project</strong> — <code>.agents/AGENTS.md</code> at repository root<br>
-Team-shared rules committed to version control. Project conventions, tech stack, code style.</p>
+<p><strong>Global Base</strong> — <code>~/.agents/AGENTS.md</code><br>
+User-level safety rules, identity, formatting preferences, and safety policies. <strong>Loaded first.</strong></p>
 </div>
 
 <div class="card">
-<p><strong>Folder</strong> — <code>.agents/AGENTS.md</code> in any subdirectory<br>
-Component-specific rules. Frontend conventions in <code>src/</code>, API patterns in <code>api/</code>, test standards in <code>tests/</code>.</p>
+<p><strong>Project Base</strong> — <code>.agents/AGENTS.md</code> at repository root<br>
+Team-shared static conventions, committed project standards, and styling guidelines. <strong>Loaded third.</strong></p>
+</div>
+
+<div class="card">
+<p><strong>Project Active</strong> — <code>AGENTS.md</code> at repository root<br>
+Task-specific active instructions and session rules. Highly visible, commonly modified, symlinked by agents. <strong>Loaded fourth.</strong></p>
+</div>
+
+<div class="card">
+<p><strong>Folder</strong> — <code>AGENTS.md</code> in any subdirectory (optional)<br>
+Component-specific rules. Directory-scoped overrides (e.g. <code>src/AGENTS.md</code>, <code>tests/AGENTS.md</code>). <strong>Loaded last.</strong></p>
 </div>
 
 <h3>Loading Model: Scoped Concatenation</h3>
-<p>Each tier's <code>AGENTS.md</code> is <strong>concatenated</strong> into the agent's context — not replaced. The project root acts as a <strong>ceiling</strong> — agents never traverse above it. Your security practices in <code>~/.agents/AGENTS.md</code> always apply; your project conventions build on top; folder-specific rules apply wherever the agent operates. <strong>Never</strong> read AGENTS.md from parent directories outside the project.</p>
+<p>Each tier's file is <strong>concatenated</strong> into the agent's context — not replaced. The project root acts as a <strong>ceiling</strong> — agents never traverse above it. Your security practices in <code>~/.agents/AGENTS.md</code> always apply; the project PRD in <code>llms.txt</code> sets functional scope; project base conventions build on top; active task instructions direct the session; and folder-specific rules apply locally. <strong>Never</strong> read files from parent directories outside the project.</p>
 
 <div class="card">
-<p><strong>~/.agents/AGENTS.md</strong> — Loaded first, always, regardless of working directory. This is the <em>canonical</em> global standard location (not <code>~/.config/AGENTS.md</code>). Define agent identity, global security rules, coding preferences, and safety policies here. Every agent session starts with this immutable base layer. Tools still using <code>~/.config/</code> should migrate to <code>~/.agents/</code> to join <code>mcp-settings.json</code> and <code>skills/**/SKILL.md</code> under one directory.</p>
+<p><strong>~/.agents/AGENTS.md</strong> — Loaded first, always. Canonical global standard location for user safety and preferences.</p>
 </div>
 
 <div class="card">
-<p><strong>{project_root}/.agents/AGENTS.md</strong> — Concatenated next. The project root is <strong>detected from the shell's inherited cwd</strong> (where the terminal was opened), or set explicitly via <code>$AGENTS_ROOT</code>. Team-shared project conventions, tech stack, code style. Committed to version control. This is your project ceiling — agents never read above it.</p>
+<p><strong>{project_root}/llms.txt</strong> — Loaded second. Defines active requirements, goals, APIs, and roadmap (functional PRD).</p>
 </div>
 
 <div class="card">
-<p><strong>{cwd}/.agents/AGENTS.md</strong> — Concatenated last. Always read when within the project boundary. Component-specific rules for wherever the agent is working right now. Frontend rules in <code>src/</code>, API rules in <code>api/</code>, test rules in <code>tests/</code>.</p>
+<p><strong>{project_root}/.agents/AGENTS.md</strong> — Loaded third. Committed project standards, tech choices, and architecture rules.</p>
+</div>
+
+<div class="card">
+<p><strong>{project_root}/AGENTS.md</strong> — Loaded fourth. Project active task rules. Task-specific instructions modified frequently.</p>
+</div>
+
+<div class="card">
+<p><strong>{cwd}/AGENTS.md</strong> — Loaded last (optional). Folder/component-specific rules (e.g. <code>src/AGENTS.md</code>, <code>tests/AGENTS.md</code>).</p>
 </div>
 
 <h3>Project Root Detection & Ceiling</h3>
@@ -108,16 +126,18 @@ Component-specific rules. Frontend conventions in <code>src/</code>, API pattern
 
 <h3>Resolution Order</h3>
 <ol>
-<li>Load <code>~/.agents/AGENTS.md</code> (global — always loaded first, the canonical global standard)</li>
+<li>Load <code>~/.agents/AGENTS.md</code> (global base — always loaded first, user-specific rules)</li>
 <li>Detect project root from inherited shell <code>$PWD</code> or <code>$AGENTS_ROOT</code></li>
-<li>Load <code>{project_root}/.agents/AGENTS.md</code> (project rules, committed)</li>
-<li>Load <code>{cwd}/.agents/AGENTS.md</code> if cwd is within project boundary (folder rules)</li>
-<li><strong>Concatenate</strong> in order: global → project → folder</li>
+<li>Load <code>{project_root}/llms.txt</code> (project PRD, functional roadmap)</li>
+<li>Load <code>{project_root}/.agents/AGENTS.md</code> (project base rules, committed)</li>
+<li>Load <code>{project_root}/AGENTS.md</code> (project active rules, symlinked)</li>
+<li>Load <code>{cwd}/AGENTS.md</code> if cwd is within project boundary (component rules, optional)</li>
+<li><strong>Concatenate</strong> in order: global → project base → project active → folder</li>
 <li><strong>Never traverse above</strong> the detected project root</li>
 </ol>
 
 <h3>Singular Rules File Fallback</h3>
-<p>If an agent only supports a single rules file, it should use either <code>~/.agents/AGENTS.md</code> (global) or the current working directory's <code>AGENTS.md</code> (project-level). These are the two canonical locations. Tools that only read one file are first-class citizens — they get the global base or cwd rules without needing to implement the full cascade.</p>
+<p>If an agent only supports a single rules file, it should read the project root <code>AGENTS.md</code> (or the symlinked file like <code>CLAUDE.md</code>) to get the active task context. This is the canonical touchpoint for active task instructions. Alternatively, it can read the global <code>~/.agents/AGENTS.md</code>. Tools that only read one file are first-class citizens.</p>
 
 <h3>Dual-Layer MCP Configuration</h3>
 <p>MCP servers follow a two-layer model — global shared, agent-specific extended:</p>
@@ -141,16 +161,16 @@ Component-specific rules. Frontend conventions in <code>src/</code>, API pattern
 <p>Tools using <code>~/.config/AGENTS.md</code> should move to <code>~/.agents/AGENTS.md</code>. Users shouldn't have to wonder if their rules are in the right place or if they're overprompting. One directory. Three concerns (behavior, tools, skills). Zero confusion.</p>
 
 <h3>AGENTS_DEPTH</h3>
-<p>Control how many levels of <code>.agents/AGENTS.md</code> are loaded <strong>downward from project root</strong> (never upward) with the <code>AGENTS_DEPTH</code> environment variable:</p>
+<p>Control how many levels of <code>AGENTS.md</code> are loaded <strong>downward from project root</strong> (never upward) with the <code>AGENTS_DEPTH</code> environment variable:</p>
 
 <div class="table-wrap">
 <table>
 <thead><tr><th>Value</th><th>Behavior</th></tr></thead>
 <tbody>
 <tr><td><code>1</code></td><td><code>~/.agents/AGENTS.md</code> only — global rules, no project or folder tiers</td></tr>
-<tr><td><code>2</code></td><td>Global + project root <code>.agents/AGENTS.md</code></td></tr>
-<tr><td><code>3</code></td><td>Global + project root + cwd sub-folder (default)</td></tr>
-<tr><td><code>4+</code></td><td>Global + project root + all intermediate subdirectories from root to cwd (deep repos)</td></tr>
+<tr><td><code>2</code></td><td>Global + project base <code>.agents/AGENTS.md</code> + project <code>llms.txt</code></td></tr>
+<tr><td><code>3</code></td><td>Global + project base <code>.agents/AGENTS.md</code> + project <code>llms.txt</code> + project root <code>AGENTS.md</code> (default)</td></tr>
+<tr><td><code>4+</code></td><td>Global + project base <code>.agents/AGENTS.md</code> + project <code>llms.txt</code> + project root <code>AGENTS.md</code> + cwd sub-folder <code>AGENTS.md</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -175,34 +195,47 @@ You are a senior engineer who writes production-grade code.
 - Commits: conventional commits format</code></pre>
 
 <h3>Discovery</h3>
-<p>Agents search for <code>.agents/AGENTS.md</code> files by walking from the current working directory upward to the filesystem root (or git repository root). The global <code>~/.agents/AGENTS.md</code> is always loaded first regardless of working directory.</p>
+<p>Agents search for <code>AGENTS.md</code> files by walking from the current working directory upward to the project root. The global <code>~/.agents/AGENTS.md</code> is always loaded first regardless of working directory. The <code>.agents/</code> directory at project level holds tooling configuration (MCP servers and skills) and project base rules (in <code>.agents/AGENTS.md</code>).</p>
 
 <!-- CASCADE -->
 <h2 id="cascade">Cascade Visualization</h2>
 
-<pre><code>~/.agents/AGENTS.md
+<pre><code>~/.agents/AGENTS.md                     ← Global Base (user preferences & safety, loaded first)
 │  "Always use TypeScript strict mode"
 │  "Never commit secrets"
 │
-└── ~/projects/my-app/.agents/AGENTS.md
-   │  "This project uses Next.js 15 with App Router"
-   │  "API routes go in app/api/"
+└── ~/projects/my-app/
+   ├── llms.txt                          ← Project PRD (active requirements, tech stack, APIs)
+   │  "App: Next.js 15 template. Focus: implement JWT auth."
+   │  "Goal: add /api/auth/register and /api/auth/login endpoints."
    │
-   ├── src/.agents/AGENTS.md
+   ├── .agents/AGENTS.md                 ← Project Base (tech stack, deployment, committed guidelines)
+   │  "This project uses Next.js 15 with App Router"
+   │  "Deployment check: run build and verify security headers"
+   │
+   ├── AGENTS.md                         ← Project Active Rules (active task/feature behavior constraints)
+   │  "Ensure all JWT tokens expire in 15 minutes"
+   │  "Do not use external auth packages — write vanilla Node cryptography"
+   │
+   ├── src/AGENTS.md (optional)          ← Folder / Component (directory-scoped guidelines)
    │  │  "React components use function declarations"
    │  │  "CSS modules only — no Tailwind in src/"
    │  │
-   │  └── components/.agents/AGENTS.md
+   │  └── components/AGENTS.md (optional)
    │     "All components must have TypeScript props interface"
    │     "Use forwardRef for DOM-wrapping components"
    │
-   ├── api/.agents/AGENTS.md
+   ├── api/AGENTS.md (optional)          ← Folder / Component
    │  "All endpoints validate input with Zod schemas"
    │  "Return typed responses, never any"
    │
-   └── tests/.agents/AGENTS.md
-      "Test files mirror src/ structure"
-      "Use describe/it blocks, not test()"</code></pre>
+   ├── tests/AGENTS.md (optional)         ← Folder / Component
+   │  "Test files mirror src/ structure"
+   │  "Use describe/it blocks, not test()"
+   │
+   └── .agents/                          ← Tooling (MCP + Skills)
+      ├── mcp-settings.json              ← project MCP servers
+      └── skills/**/SKILL.md             ← project skills</code></pre>
 
 <!-- AGENT CONFIG MAP -->
 <h2 id="agents">Agent Config Map</h2>
@@ -214,7 +247,7 @@ You are a senior engineer who writes production-grade code.
 <tr><th>Agent</th><th>Config File</th><th>Project Path</th><th>Global Path</th><th>Docs</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Pi</strong></td><td><code>AGENTS.md</code></td><td><code>.agents/AGENTS.md</code></td><td><code>~/.agents/AGENTS.md</code> <span class="badge">native</span></td><td><a href="https://github.com/nbiish/agents-standard">docs</a></td></tr>
+<tr><td><strong>Pi</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.agents/AGENTS.md</code> <span class="badge">native</span></td><td><a href="https://github.com/nbiish/agents-standard">docs</a></td></tr>
 <tr><td><strong>Claude Code</strong></td><td><code>CLAUDE.md</code></td><td><code>CLAUDE.md</code></td><td><code>~/.claude/CLAUDE.md</code></td><td><a href="https://docs.anthropic.com/en/docs/claude-code">docs</a></td></tr>
 <tr><td><strong>Agy</strong></td><td><code>GEMINI.md</code></td><td><code>GEMINI.md</code></td><td><code>~/.gemini/GEMINI.md</code></td><td><a href="https://github.com/google-gemini/gemini-cli">docs</a></td></tr>
 <tr><td><strong>OpenAI Codex</strong></td><td><code>AGENTS.md</code></td><td><code>AGENTS.md</code></td><td><code>~/.codex/instructions.md</code></td><td><a href="https://github.com/openai/codex">docs</a></td></tr>
@@ -429,40 +462,64 @@ echo "Done. Edit ~/.agents/AGENTS.md — all symlinked agents follow your rules.
 echo "See https://agentsstandard.com for project-level setup."</code></pre>
 
 <h3>Project-level setup</h3>
-<p>For project rules, commit <code>.agents/AGENTS.md</code> to the repo root, then symlink agent-specific files:</p>
+<p>Create <code>llms.txt</code> at your repo root for the Project PRD (functional requirements, scope, tech stack), <code>.agents/AGENTS.md</code> for static project base rules (framework choice, deployment checklists, static guidelines), and create <code>AGENTS.md</code> at your repo root for active task instructions (symlinked to agent-specific configs):</p>
 
 <pre><code class="language-bash"># In your project root:
-mkdir -p .agents
-# Write your project rules
-cat > .agents/AGENTS.md &lt;&lt;'EOF'
-# Project Rules
-- This is a Next.js 15 project using App Router
-- All API routes use Zod validation
-- Tests mirror src/ structure
+# 1. Write your Project PRD
+cat > llms.txt &lt;&lt;'EOF'
+# Project PRD: JWT Authentication
+- Stack: Next.js 15, TypeScript, PostgreSQL
+- Features: User registration and login with JWT tokens
+- APIs: /api/auth/register and /api/auth/login
 EOF
 
-# Symlink to agent-specific project files
-ln -sf .agents/AGENTS.md CLAUDE.md
-ln -sf .agents/AGENTS.md .cursorrules
-ln -sf .agents/AGENTS.md .windsurfrules
-ln -sf .agents/AGENTS.md .clinerules
-ln -sf .agents/AGENTS.md .roorules
-ln -sf .agents/AGENTS.md GEMINI.md
-ln -sf .agents/AGENTS.md CODESTRAL.md
-ln -sf .agents/AGENTS.md QWEN.md
-ln -sf .agents/AGENTS.md CRUSH.md
+# 2. Write your static project rules
+mkdir -p .agents
+cat > .agents/AGENTS.md &lt;&lt;'EOF'
+# Project Base Rules
+- Tech stack: Next.js 15 (App Router)
+- Linting: ESLint strict mode
+- Deployment check: run npm run build and check bundle sizes
+EOF
+
+# 3. Write your active session rules
+cat > AGENTS.md &lt;&lt;'EOF'
+# Active Session
+- Focus on JWT cryptography implementation in Node.js
+- Do not use external auth packages — write vanilla crypto
+- Refer to llms.txt for API schema requirements
+EOF
+
+# Symlink agent-specific files to the root AGENTS.md
+ln -sf AGENTS.md CLAUDE.md
+ln -sf AGENTS.md .cursorrules
+ln -sf AGENTS.md .windsurfrules
+ln -sf AGENTS.md .clinerules
+ln -sf AGENTS.md .roorules
+ln -sf AGENTS.md GEMINI.md
+ln -sf AGENTS.md CODESTRAL.md
+ln -sf AGENTS.md QWEN.md
+ln -sf AGENTS.md CRUSH.md
 
 # GitHub Copilot uses a different path
 mkdir -p .github
-ln -sf ../.agents/AGENTS.md .github/copilot-instructions.md</code></pre>
+ln -sf ../AGENTS.md .github/copilot-instructions.md
+
+# Use .agents/ for tooling configuration and project base rules
+mkdir -p .agents/skills
+# .agents/AGENTS.md          — project base rules
+# .agents/mcp-settings.json  — project MCP servers
+# .agents/skills/**/SKILL.md — project agent skills</code></pre>
 
 <!-- ADOPT -->
 <h2 id="adopt">Adopt the Standard</h2>
 <p>For agent tool developers:</p>
 <ol>
 <li>Search for <code>~/.agents/AGENTS.md</code> at startup — load as global user rules <strong>(loaded first)</strong></li>
-<li>Walk from repo root to load <code>.agents/AGENTS.md</code> — project-level rules</li>
-<li>Walk from <code>cwd</code> upward collecting <code>.agents/AGENTS.md</code> files — folder-scoped rules</li>
+<li>Load <code>llms.txt</code> at repo root — project-wide PRD context <strong>(loaded second)</strong></li>
+<li>Load <code>.agents/AGENTS.md</code> at repo root — project base rules <strong>(loaded third)</strong></li>
+<li>Load <code>AGENTS.md</code> at repo root — project active / session rules <strong>(loaded fourth)</strong></li>
+<li>Walk from <code>cwd</code> upward collecting <code>AGENTS.md</code> files within the project boundary — folder-scoped rules (optional, <strong>loaded last</strong>)</li>
 <li>Merge rules: global as base, most specific scope wins conflicts</li>
 </ol>
 
@@ -476,10 +533,15 @@ ln -sf ../.agents/AGENTS.md .github/copilot-instructions.md</code></pre>
 <p>The <code>~/.agents/</code> directory can serve as a single source of truth for all agent configuration — not just behavior rules:</p>
 
 <pre><code>~/.agents/
-├── AGENTS.md              ← Behavior rules (global → project → folder cascade)
+├── AGENTS.md              ← Behavior rules (global base, loaded first)
 ├── mcp-settings.json      ← MCP server configs (all agents read from here)
 └── skills/                ← Agent Skills (reusable capabilities)
-    └── **/SKILL.md        ← Skills discovered by all agents</code></pre>
+    └── **/SKILL.md        ← Skills discovered by all agents
+
+{project}/.agents/             ← Tooling & project base rules
+├── AGENTS.md              ← Project base rules (tech stack, deployment)
+├── mcp-settings.json      ← Project-specific MCP servers
+└── skills/**/SKILL.md     ← Project-specific agent skills</code></pre>
 
 <div class="card">
 <p><strong>AGENTS.md</strong> = how the agent should <em>behave</em> (this standard)<br>
@@ -514,7 +576,7 @@ ln -sf ../.agents/AGENTS.md .github/copilot-instructions.md</code></pre>
 
 <footer>
 <p><strong>Agents Standard</strong> — <a href="https://agentsstandard.com">agentsstandard.com</a> · <a href="https://github.com/nbiish/agents-standard">Spec</a> · <a href="https://github.com/nbiish/agentsstandard-dot-com">Site</a> · <a href="https://github.com/nbiish/agentsstandard-dot-com/issues/new">Add an Agent</a></p>
-<p>One convention. Three scopes. All agents.</p>
+<p>One convention. Five scopes. All agents.</p>
 </footer>
 
 </body>
