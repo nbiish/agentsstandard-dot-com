@@ -1,0 +1,183 @@
+{
+  "$schema": "https://agentsstandard.com/schemas/providers.json",
+  "version": "1.0.0",
+  "description": "LLM provider API endpoints, pricing, and referral codes for AI coding agents",
+  "providers": {
+    "anthropic": {
+      "name": "Anthropic",
+      "models": ["Claude Opus 4.7", "Claude Sonnet 4.6", "Claude Haiku 4.5"],
+      "api_base": "https://api.anthropic.com/v1",
+      "docs_url": "https://docs.anthropic.com/en/api",
+      "pricing_url": "https://www.anthropic.com/pricing",
+      "auth": "x-api-key header",
+      "env_var": "ANTHROPIC_API_KEY",
+      "free_tier": null,
+      "referral": null
+    },
+    "openai": {
+      "name": "OpenAI",
+      "models": ["GPT-5.4", "GPT-5.3", "o4-mini", "Codex models"],
+      "api_base": "https://api.openai.com/v1",
+      "docs_url": "https://platform.openai.com/docs/api-reference",
+      "pricing_url": "https://openai.com/api/pricing",
+      "auth": "Bearer token",
+      "env_var": "OPENAI_API_KEY",
+      "free_tier": null,
+      "referral": null
+    },
+    "google": {
+      "name": "Google Gemini",
+      "models": ["Gemini 2.5 Pro", "Gemini 2.5 Flash", "Gemini 2.0 Ultra"],
+      "api_base": "https://generativelanguage.googleapis.com/v1beta",
+      "docs_url": "https://ai.google.dev/gemini-api/docs",
+      "pricing_url": "https://ai.google.dev/pricing",
+      "auth": "API key query parameter or Bearer token",
+      "env_var": "GEMINI_API_KEY",
+      "free_tier": "Gemini 2.5 Flash — free tier available",
+      "referral": null
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "models": ["DeepSeek-V4", "DeepSeek-V3", "DeepSeek-Coder-V2"],
+      "api_base": "https://api.deepseek.com/v1",
+      "docs_url": "https://platform.deepseek.com/api-docs",
+      "pricing_url": "https://platform.deepseek.com/pricing",
+      "auth": "Bearer token",
+      "env_var": "DEEPSEEK_API_KEY",
+      "free_tier": null,
+      "referral": null
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "models": ["250+ models from all providers"],
+      "api_base": "https://openrouter.ai/api/v1",
+      "docs_url": "https://openrouter.ai/docs",
+      "pricing_url": "https://openrouter.ai/models",
+      "auth": "Bearer token",
+      "env_var": "OPENROUTER_API_KEY",
+      "free_tier": "Free models available (Gemini Flash, Llama, etc.)",
+      "referral": null
+    },
+    "zai": {
+      "name": "z.ai / ZhipuAI",
+      "models": ["GLM-5.1", "GLM-4.7", "GLM-4.5"],
+      "api_base": "https://api.z.ai/api/coding/paas/v4",
+      "docs_url": "https://docs.z.ai",
+      "pricing_url": "https://z.ai/pricing",
+      "auth": "Bearer token",
+      "env_var": "ZAI_API_KEY",
+      "free_tier": null,
+      "referral": {
+        "url": "https://z.ai/subscribe?ic=B50UECNB9T",
+        "code": "B50UECNB9T",
+        "description": "Subscribe to z.ai with referral code"
+      }
+    },
+    "wafer": {
+      "name": "Wafer AI",
+      "models": ["GLM-5.1", "GLM-4.7", "Various models"],
+      "api_base": "https://api.wafer.ai/v1",
+      "docs_url": "https://wafer.ai/docs",
+      "pricing_url": "https://wafer.ai/pricing",
+      "auth": "Bearer token",
+      "env_var": "WAFER_API_KEY",
+      "free_tier": null,
+      "referral": {
+        "code": "8b2ul8o0",
+        "description": "Use referral code 8b2ul8o0 when signing up"
+      }
+    },
+    "opencode": {
+      "name": "OpenCode AI",
+      "models": ["Various open-weight models"],
+      "api_base": "https://api.opencode.ai/v1",
+      "docs_url": "https://opencode.ai/docs",
+      "pricing_url": "https://opencode.ai/pricing",
+      "auth": "Bearer token",
+      "env_var": "OPENCODE_API_KEY",
+      "free_tier": "Free tier available",
+      "referral": {
+        "url": "https://opencode.ai/go?ref=APBJCPVXC1",
+        "code": "APBJCPVXC1",
+        "description": "Sign up for OpenCode AI"
+      }
+    },
+    "mistral": {
+      "name": "Mistral AI",
+      "models": ["Mistral Large 3", "Codestral", "Mistral Small"],
+      "api_base": "https://api.mistral.ai/v1",
+      "docs_url": "https://docs.mistral.ai/api",
+      "pricing_url": "https://mistral.ai/pricing",
+      "auth": "Bearer token",
+      "env_var": "MISTRAL_API_KEY",
+      "free_tier": "Free tier available (rate limited)",
+      "referral": null
+    },
+    "groq": {
+      "name": "Groq",
+      "models": ["Llama 4", "Mixtral", "Gemma 3"],
+      "api_base": "https://api.groq.com/openai/v1",
+      "docs_url": "https://console.groq.com/docs",
+      "pricing_url": "https://groq.com/pricing",
+      "auth": "Bearer token",
+      "env_var": "GROQ_API_KEY",
+      "free_tier": "Free tier — 30 req/min, 14,400 req/day",
+      "referral": null
+    },
+    "xai": {
+      "name": "xAI / Grok",
+      "models": ["Grok-4", "Grok-3"],
+      "api_base": "https://api.x.ai/v1",
+      "docs_url": "https://docs.x.ai/api",
+      "pricing_url": "https://x.ai/api",
+      "auth": "Bearer token",
+      "env_var": "XAI_API_KEY",
+      "free_tier": null,
+      "referral": null
+    },
+    "together": {
+      "name": "Together AI",
+      "models": ["Llama 4", "Mixtral", "DeepSeek", "Qwen"],
+      "api_base": "https://api.together.xyz/v1",
+      "docs_url": "https://docs.together.ai/docs",
+      "pricing_url": "https://together.ai/pricing",
+      "auth": "Bearer token",
+      "env_var": "TOGETHER_API_KEY",
+      "free_tier": "$1 free credit on signup",
+      "referral": null
+    },
+    "fireworks": {
+      "name": "Fireworks AI",
+      "models": ["Llama 4", "Mixtral", "Qwen", "DeepSeek"],
+      "api_base": "https://api.fireworks.ai/inference/v1",
+      "docs_url": "https://docs.fireworks.ai/api-reference",
+      "pricing_url": "https://fireworks.ai/pricing",
+      "auth": "Bearer token",
+      "env_var": "FIREWORKS_API_KEY",
+      "free_tier": "Free tier — 100 req/day for serverless models",
+      "referral": null
+    },
+    "ollama": {
+      "name": "Ollama (Local)",
+      "models": ["Llama 4", "Qwen 3", "DeepSeek-R1", "Mistral", "Gemma 3"],
+      "api_base": "http://localhost:11434/v1",
+      "docs_url": "https://ollama.com/blog/openai-compatibility",
+      "pricing_url": "https://ollama.com",
+      "auth": "None (local)",
+      "env_var": null,
+      "free_tier": "Completely free — runs on your hardware",
+      "referral": null
+    },
+    "lmstudio": {
+      "name": "LM Studio (Local)",
+      "models": ["Any GGUF model from Hugging Face"],
+      "api_base": "http://localhost:1234/v1",
+      "docs_url": "https://lmstudio.ai/docs",
+      "pricing_url": "https://lmstudio.ai",
+      "auth": "None (local)",
+      "env_var": null,
+      "free_tier": "Completely free — runs on your hardware",
+      "referral": null
+    }
+  }
+}

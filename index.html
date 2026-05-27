@@ -57,6 +57,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color
 <a href="#cascade">Cascade</a>
 <a href="#agents">Agent Config Map</a>
 <a href="#mcp">MCP Config Map</a>
+<a href="#providers">Providers</a>
 <a href="#symlink">Setup</a>
 <a href="#adopt">Adopt</a>
 <a href="https://github.com/nbiish/agents-standard">Spec Repo</a>
@@ -239,6 +240,62 @@ You are a senior engineer who writes production-grade code.
 <div class="card">
 <p>Every agent stores MCP configs in a <strong>different file, different format, different path</strong>. JSON, YAML, TOML, JSONC. Global-only, project-only, both. This standard proposes <code>~/.agents/mcp-settings.json</code> as a universal MCP config that agents can read — and <code>~/.agents/skills/**/SKILL.md</code> as a universal skills directory — so users configure once and all agents follow.</p>
 </div>
+
+<!-- PROVIDERS -->
+<h2 id="providers">LLM Providers</h2>
+<p>Every agent needs a model. Here are all the LLM API providers, their endpoints, auth patterns, free tiers, and referral links. Plug these into any agent's config.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Provider</th><th>Key Models</th><th>API Base URL</th><th>Auth Env Var</th><th>Free Tier</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Anthropic</strong></td><td>Claude Opus 4.7, Sonnet 4.6, Haiku 4.5</td><td><code>https://api.anthropic.com/v1</code></td><td><code>ANTHROPIC_API_KEY</code></td><td>—</td></tr>
+<tr><td><strong>OpenAI</strong></td><td>GPT-5.4, GPT-5.3, o4-mini</td><td><code>https://api.openai.com/v1</code></td><td><code>OPENAI_API_KEY</code></td><td>—</td></tr>
+<tr><td><strong>Google Gemini</strong></td><td>Gemini 2.5 Pro, 2.5 Flash</td><td><code>https://generativelanguage.googleapis.com/v1beta</code></td><td><code>GEMINI_API_KEY</code></td><td>Flash free</td></tr>
+<tr><td><strong>DeepSeek</strong></td><td>DeepSeek-V4, V3, Coder-V2</td><td><code>https://api.deepseek.com/v1</code></td><td><code>DEEPSEEK_API_KEY</code></td><td>—</td></tr>
+<tr><td><strong>OpenRouter</strong></td><td>250+ models from all providers</td><td><code>https://openrouter.ai/api/v1</code></td><td><code>OPENROUTER_API_KEY</code></td><td>Free models</td></tr>
+<tr><td><strong>z.ai / ZhipuAI</strong></td><td>GLM-5.1, GLM-4.7</td><td><code>https://api.z.ai/api/coding/paas/v4</code></td><td><code>ZAI_API_KEY</code></td><td>—</td></tr>
+<tr><td><strong>Wafer AI</strong></td><td>GLM-5.1, various models</td><td><code>https://api.wafer.ai/v1</code></td><td><code>WAFER_API_KEY</code></td><td>—</td></tr>
+<tr><td><strong>Mistral AI</strong></td><td>Mistral Large 3, Codestral</td><td><code>https://api.mistral.ai/v1</code></td><td><code>MISTRAL_API_KEY</code></td><td>Free (rated)</td></tr>
+<tr><td><strong>Groq</strong></td><td>Llama 4, Mixtral, Gemma 3</td><td><code>https://api.groq.com/openai/v1</code></td><td><code>GROQ_API_KEY</code></td><td>Free 30r/m</td></tr>
+<tr><td><strong>xAI / Grok</strong></td><td>Grok-4, Grok-3</td><td><code>https://api.x.ai/v1</code></td><td><code>XAI_API_KEY</code></td><td>—</td></tr>
+<tr><td><strong>Together AI</strong></td><td>Llama 4, DeepSeek, Qwen</td><td><code>https://api.together.xyz/v1</code></td><td><code>TOGETHER_API_KEY</code></td><td>$1 credit</td></tr>
+<tr><td><strong>Fireworks AI</strong></td><td>Llama 4, Qwen, DeepSeek</td><td><code>https://api.fireworks.ai/inference/v1</code></td><td><code>FIREWORKS_API_KEY</code></td><td>100r/d</td></tr>
+<tr><td><strong>Ollama</strong></td><td>Llama 4, Qwen 3, Gemma 3</td><td><code>http://localhost:11434/v1</code></td><td>—</td><td>Free</td></tr>
+<tr><td><strong>LM Studio</strong></td><td>Any GGUF from Hugging Face</td><td><code>http://localhost:1234/v1</code></td><td>—</td><td>Free</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Referral Links</h3>
+<p>Sign up through these links to support the Agents Standard project:</p>
+
+<div class="card">
+<p><strong><a href="https://z.ai/subscribe?ic=B50UECNB9T">z.ai / ZhipuAI</a></strong> — GLM-5.1, GLM-4.7 models. Use code <code>B50UECNB9T</code> at <a href="https://z.ai/subscribe?ic=B50UECNB9T">z.ai/subscribe</a></p>
+</div>
+
+<div class="card">
+<p><strong><a href="https://opencode.ai/go?ref=APBJCPVXC1">OpenCode AI</a></strong> — API access to open-weight coding models. Use code <code>APBJCPVXC1</code> at <a href="https://opencode.ai/go?ref=APBJCPVXC1">opencode.ai/go</a></p>
+</div>
+
+<div class="card">
+<p><strong>Wafer AI</strong> — Use referral code <code>8b2ul8o0</code> when signing up at <a href="https://wafer.ai">wafer.ai</a></p>
+</div>
+
+<h3>Using Providers With Any Agent</h3>
+<p>Most coding agents support OpenAI-compatible endpoints. Point any agent at a provider by setting the base URL and API key:</p>
+
+<pre><code class="language-bash"># Example: Point Claude Code at OpenRouter
+export ANTHROPIC_BASE_URL="https://openrouter.ai/api/v1"
+export ANTHROPIC_API_KEY="sk-or-..."
+
+# Example: Point Codex at z.ai
+export OPENAI_BASE_URL="https://api.z.ai/api/coding/paas/v4"
+export OPENAI_API_KEY="zai-..."</code></pre>
+
+<p>Full structured data: <a href="providers.json">providers.json</a> — machine-readable provider endpoints, auth patterns, and referral codes.</p>
 
 <!-- SETUP / SYMLINK -->
 <h2 id="symlink">Setup: One Source of Truth</h2>
