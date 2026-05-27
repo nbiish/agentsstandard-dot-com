@@ -3,13 +3,38 @@
   "name": "AGENTS.md",
   "version": "1.1.0",
   "description": "Hierarchical configuration standard for AI coding agents — one convention, all agents",
-  "loading_model": "concatenation",
-  "loading_description": "Each tier's AGENTS.md is concatenated (not replaced). Global rules form the base identity and security posture. Each subsequent tier appends context-specific rules. CLAUDE.md, GEMINI.md, and other agent-specific files remain as independent context files read by their respective tools.",
+  "loading_model": "scoped-concatenation",
+  "loading_description": "AGENTS.md files are concatenated (not replaced) within a bounded scope. The project root (inherited terminal cwd) acts as a ceiling — agents never traverse above it. Global rules form the immutable base. Each tier within the project appends context-specific rules.",
+  "project_root_detection": {
+    "method": "shell_inheritance",
+    "description": "The project root is the directory the shell was opened in (inherited terminal cwd), not the filesystem root. Agents detect this via the shell's initial $PWD or an AGENTS_ROOT env var. This prevents accidentally reading AGENTS.md files from parent directories (e.g. a github repo management AGENTS.md one level up).",
+    "env_var": "AGENTS_ROOT",
+    "note": "If AGENTS_ROOT is set, it overrides shell-inherited cwd detection."
+  },
+  "traversal_rules": {
+    "never_go_up": "Agents must never traverse above the detected project root. If the user cds .. past the project root, only ~/.agents/AGENTS.md is loaded — no parent directory AGENTS.md files are picked up.",
+    "always_read_cwd": "Within the project boundary, the current working directory's AGENTS.md is always read (if it exists). This ensures folder-specific rules apply wherever the agent operates.",
+    "ceiling": "The project root AGENTS.md is the highest project-level file loaded. ~/.agents/AGENTS.md is always the highest overall (global ceiling)."
+  },
   "resolution_order": [
-    "~/.agents/AGENTS.md (global base — loaded first, always loaded regardless of cwd)",
-    ".agents/AGENTS.md at repository root (project rules, committed, concatenated after global)",
-    ".agents/AGENTS.md in current working directory (folder-specific rules, concatenated last)"
+    "~/.agents/AGENTS.md (global base — always loaded first, immutable, IS the global standard)",
+    "Detect project root via inherited terminal cwd or $AGENTS_ROOT",
+    "{project_root}/.agents/AGENTS.md (project rules, committed, concatenated after global)",
+    "{cwd}/.agents/AGENTS.md for any subdirectory within project boundary (folder rules, loaded last)"
   ],
+  "canonical_global_path": {
+    "primary": "~/.agents/AGENTS.md",
+    "note": "Some tools currently use ~/.config/AGENTS.md. The standard defines ~/.agents/AGENTS.md as the canonical global path. Tools using ~/.config/ should migrate to ~/.agents/ to join ~/.agents/mcp-settings.json and ~/.agents/skills/**/SKILL.md under one directory. The agents-standard CLI handles migration."
+  },
+  "dual_layer_mcp": {
+    "global": "~/.agents/mcp-settings.json — MCP servers available across all agents and IDEs. Shared foundation.",
+    "agent_specific": "Each agent/IDE can also read its own MCP config file (e.g. ~/.claude.json, .cursor/mcp.json) for finer customization. Agent-specific configs extend — not replace — the global set.",
+    "note": "This dual-layer model prevents users from duplicating MCP configs across every agent. Shared servers go in ~/.agents/mcp-settings.json. Agent-specific extras go in the agent's own config."
+  },
+  "singular_rules_fallback": {
+    "description": "If an agent only supports a single rules file, it should use either ~/.agents/AGENTS.md (global) or the current working directory's AGENTS.md (project). These are the two canonical locations.",
+    "note": "Tools that only read one file are first-class citizens — they get the global base or cwd rules without needing to implement the full cascade."
+  },
   "agent_specific_files": {
     "CLAUDE.md": "Independent context file — Claude Code reads this directly. Not replaced by AGENTS.md unless user symlinks.",
     "GEMINI.md": "Independent context file — Agy/Gemini CLI reads this directly. Not replaced by AGENTS.md unless user symlinks.",
@@ -17,18 +42,22 @@
   },
   "env_vars": {
     "AGENTS_DEPTH": {
-      "description": "Controls how many directory levels of .agents/AGENTS.md to read from cwd upward",
+      "description": "Controls how many directory levels of .agents/AGENTS.md to read from project root downward (never upward)",
       "default": 3,
       "values": {
         "1": "~/.agents/AGENTS.md only (global rules, no project/folder)",
         "2": "global + project root .agents/AGENTS.md",
-        "3": "global + project root + cwd folder .agents/AGENTS.md (default)",
-        "4+": "global + project root + all intermediate directories to cwd"
+        "3": "global + project root + cwd sub-folder .agents/AGENTS.md (default)",
+        "4+": "global + project root + all intermediate subdirectories from project root to cwd"
       }
     },
     "AGENTS_PATH": {
-      "description": "Override the global AGENTS.md path",
+      "description": "Override the global AGENTS.md path (default: ~/.agents/AGENTS.md)",
       "default": "~/.agents/AGENTS.md"
+    },
+    "AGENTS_ROOT": {
+      "description": "Explicitly set the project root directory. Overrides shell-inherited cwd detection.",
+      "default": "inherited from shell's initial $PWD at launch time"
     }
   },
   "conflict_policy": "most-specific-wins (folder > project > global)",
