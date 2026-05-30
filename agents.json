@@ -340,6 +340,7 @@
       "project_path": "QWEN.md",
       "native": false,
       "symlink": true,
+      "note": "Configure global support via QWEN_HOME environment variable pointing to ~/.agents.",
       "mcp_config": {
         "global_path": "~/.qwen/settings.json",
         "project_path": ".qwen/settings.json",
@@ -423,11 +424,10 @@
     },
     "codewhale": {
       "file": "AGENTS.md",
-      "global_path": null,
+      "global_path": "~/.agents/AGENTS.md",
       "project_path": "AGENTS.md",
-      "native": false,
-      "symlink": true,
-      "note": "CodeWhale by Hmbown. DeepSeek-first terminal agent with ACP support. Reads AGENTS.md at project root.",
+      "native": true,
+      "note": "CodeWhale by Hmbown. DeepSeek-first terminal agent with ACP support. Natively loads ~/.agents/AGENTS.md.",
       "docs_url": "https://github.com/Hmbown/CodeWhale"
     },
     "hermes-agent": {
@@ -474,7 +474,7 @@
     },
     "zed": {
       "file": "AGENTS.md",
-      "global_path": null,
+      "global_path": "~/.config/zed/AGENTS.md",
       "project_path": "AGENTS.md",
       "native": true,
       "note": "Zed IDE. Reads AGENTS.md, .cursorrules, and .zed/ configuration. Native AGENTS.md support.",

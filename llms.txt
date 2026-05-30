@@ -47,14 +47,14 @@ Plain Markdown. No YAML frontmatter. No schema. Just write rules.
 | Crush | AGENTS.md | ~/.config/crush/crush.md | CRUSH.md | — |
 | OpenCode | AGENTS.md | — | AGENTS.md | Yes |
 | Deep Agents (dcode) | AGENTS.md | ~/.deepagents/AGENTS.md | .deepagents/AGENTS.md | Yes |
-| CodeWhale | AGENTS.md | — | AGENTS.md | — |
+| CodeWhale | AGENTS.md | ~/.agents/AGENTS.md | AGENTS.md | Yes |
 | Hermes Agent | AGENTS.md | ~/.hermes/SOUL.md | AGENTS.md | — |
 | Agent Zero (a0) | AGENTS.md | — | AGENTS.md | — |
 | Aider | .aider.conf.yml | ~/.aider.conf.yml | .aider.conf.yml | — |
 | Continue | config.json | ~/.continue/config.json | .continue/config.json | — |
 | Qwen Code | QWEN.md | — | QWEN.md | — |
 | Mistral Codestral | CODESTRAL.md | — | CODESTRAL.md | — |
-| Zed | AGENTS.md | — | AGENTS.md | Yes |
+| Zed | AGENTS.md | ~/.config/zed/AGENTS.md | AGENTS.md | Yes |
 | MiniCC | AGENTS.md | ~/.minicc/AGENTS.md | AGENTS.md | — |
 | fcc-claude | AGENTS.md | ~/.fcc/.env | AGENTS.md | — |
 
@@ -150,3 +150,15 @@ They complement each other. All use the `.agents/` directory convention.
 - GitHub (site): https://github.com/nbiish/agentsstandard-dot-com
 - Agent Skills: https://agentskills.io
 - Structured JSON: https://agentsstandard.com/agents.json
+
+## Development Status & Context
+
+- **Recent Updates**:
+  - Refined the `agents-standard` CLI TUI tool to feature a space-bar toggling mechanism and a "Submit changes" option at the bottom for final confirmation.
+  - Added support for **Zed** (`~/.config/zed/AGENTS.md`) and **CodeWhale** (`~/.agents/AGENTS.md`) native and global paths.
+  - Fully synchronized all specification tables, JSON files, and CLI sources between `agentsstandard-dot-com` (website/docs repo) and `agents-standard` (spec/CLI repo).
+- **Current Goals & Iterations**:
+  - Track downstream adoption of standard directories and global configurations.
+  - Keep agent configuration mappings updated in `agents.json` as new agents add support.
+  - Maintain the automated CLI link system matching the latest `agents.json` metadata.
+

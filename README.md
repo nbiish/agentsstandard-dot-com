@@ -88,14 +88,14 @@ Every major agent's config file, global path, and project path — verified agai
 | Crush | `AGENTS.md` | `~/.config/crush/crush.md` | `CRUSH.md` | — |
 | OpenCode | `AGENTS.md` | — | `AGENTS.md` | Yes |
 | Deep Agents (dcode) | `AGENTS.md` | `~/.deepagents/AGENTS.md` | `.deepagents/AGENTS.md` | Yes |
-| CodeWhale | `AGENTS.md` | — | `AGENTS.md` | — |
+| CodeWhale | `AGENTS.md` | `~/.agents/AGENTS.md` | `AGENTS.md` | Yes |
 | Hermes Agent | `AGENTS.md` | `~/.hermes/SOUL.md` | `AGENTS.md` | — |
 | Agent Zero (a0) | `AGENTS.md` | — | `AGENTS.md` | — |
 | Aider | `.aider.conf.yml` | `~/.aider.conf.yml` | `.aider.conf.yml` | — |
 | Continue | `config.json` | `~/.continue/config.json` | `.continue/config.json` | — |
 | Qwen Code | `QWEN.md` | — | `QWEN.md` | — |
 | Mistral Codestral | `CODESTRAL.md` | — | `CODESTRAL.md` | — |
-| Zed | `AGENTS.md` | — | `AGENTS.md` | Yes |
+| Zed | `AGENTS.md` | `~/.config/zed/AGENTS.md` | `AGENTS.md` | Yes |
 | MiniCC | `AGENTS.md` | `~/.minicc/AGENTS.md` | `AGENTS.md` | — |
 | fcc-claude | `AGENTS.md` | `~/.fcc/.env` | `AGENTS.md` | — |
 

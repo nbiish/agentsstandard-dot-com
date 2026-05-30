@@ -36,6 +36,8 @@ const AGENTS = [
   { key: 'warp',           name: 'Warp',               global: null,                                                      note: 'settings UI — no global file' },
   { key: 'aider',          name: 'Aider',              global: path.join(HOME, '.aider.conf.yml'),                       note: 'YAML format — manual setup' },
   { key: 'continue',       name: 'Continue',           global: path.join(HOME, '.continue', 'config.json'),               note: 'JSON format — manual setup' },
+  { key: 'zed',            name: 'Zed',                global: path.join(HOME, '.config', 'zed', 'AGENTS.md') },
+  { key: 'codewhale',      name: 'CodeWhale',          global: null,                                                      note: 'native — already reads ~/.agents/AGENTS.md' },
 ];
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -145,14 +147,14 @@ function render() {
   // Spacer
   process.stdout.write('\n');
 
-  // Bottom bar — Apply
+  // Bottom bar — Submit
   const barY = process.stdout.rows - 2;
   moveTo(barY, 1);
   const isApply = cursorIdx === agentStates.length;
   if (isApply) {
-    process.stdout.write(`${C.invert}  Apply changes  ${C.reset} ${C.green}← press Enter${C.reset}`);
+    process.stdout.write(`${C.invert}  Submit changes  ${C.reset} ${C.green}← press Enter${C.reset}`);
   } else {
-    process.stdout.write(`${C.dim}  Apply changes  ← navigate here and press Enter${C.reset}`);
+    process.stdout.write(`${C.dim}  Submit changes  ← navigate here and press Enter${C.reset}`);
   }
 
   // Message line
@@ -160,7 +162,7 @@ function render() {
   if (message) {
     process.stdout.write(`${C.yellow}  ${message}${C.reset}`);
   } else {
-    process.stdout.write(`  ${C.dim}↑↓ navigate  space toggle  enter apply  q quit  d depth  g global path${C.reset}`);
+    process.stdout.write(`  ${C.dim}↑↓ navigate  space toggle  enter submit  q quit  d depth  g global path${C.reset}`);
   }
 
   moveTo(barY + 2, 1);
@@ -395,7 +397,7 @@ function main() {
     Space      Toggle symlink on/off
     d          Cycle AGENTS_DEPTH (1-5)
     g          Change global AGENTS.md path
-    Enter      Apply changes (when on "Apply changes" bar)
+    Enter      Submit changes (when on "Submit changes" bar)
     q          Quit
 
   ${C.bold}Project setup:${C.reset}
