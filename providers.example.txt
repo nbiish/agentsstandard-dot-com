@@ -1,0 +1,173 @@
+# =============================================================================
+# UNIFIED LLM PROVIDER CONFIGURATION REFERENCE
+# =============================================================================
+# Format:    AGENTS STANDARD PROVIDER REFERENCE v2.0.0
+# Location:  ~/.agents/providers.txt
+# Purpose:   Master configuration reference for ALL agentic tools.
+#            kilo, crush, pi, goose, dcode, hermes, cline, qwen-code, Zed,
+#            Agy/Gemini CLI, Codex, Windsurf, Cursor, Copilot, Junie, and more.
+#
+# This file defines LLM providers and models in a single, agent-agnostic format
+# that any coding agent can read. Tool makers retain their own per-tool configs
+# for provider/model overrides — this is the base standard, not a replacement.
+#
+# SCHEMA: providers.txt is a tab-separated-value (TSV) reference document
+# organized into sections delimited by `# ===...===` headers. The file is both
+# human-readable documentation AND machine-parseable configuration.
+#
+# SECURITY: Provider API keys are NEVER stored in this file. Load keys through
+#           secure runtime environments, PQC-encrypted bundles, or agent-native
+#           credential stores. Use ${ENV_VAR} references only.
+# =============================================================================
+
+# =============================================================================
+# PROVIDER SUMMARY TABLE
+# =============================================================================
+# Format: │ Provider-Namespace │ API Endpoint                          │ Key Env Var    │ Default Agent │
+#
+# The Provider-Namespace is the canonical key used throughout this file
+# and by agents referencing it. Use lowercase, hyphen-separated names.
+#
+# Example entries (replace with your own providers):
+#
+# │ your-provider      │ https://api.your-provider.com/v1            │ YOUR_API_KEY   │ —            │
+# │ openai             │ https://api.openai.com/v1                   │ OPENAI_API_KEY │ —            │
+# │ anthropic          │ https://api.anthropic.com/v1                │ ANTHROPIC_API_KEY│ —          │
+# │ local              │ http://localhost:11434/v1                   │ —              │ —            │
+#
+# For each provider, document: namespace, endpoint URL, required env var,
+# and which agent uses it as default (if any).
+
+# =============================================================================
+# MASTER MODEL SPECIFICATION
+# =============================================================================
+# Format (TSV, tab-separated):
+# │ # │ Provider           │ Model ID (API)                │ Display Name          │ Context  │ Output   │ Tools │ Img  │ Cache │ Reasoning │
+#
+# COLUMN DEFINITIONS:
+#   #           — Row number (sequential, for human reference)
+#   Provider    — Provider namespace from the summary table above
+#   Model ID    — Exact API model identifier (as sent in the `model` field)
+#   Display     — Human-readable display name (used in agent UIs/pickers)
+#   Context     — Maximum context window in tokens
+#   Output      — Maximum output tokens
+#   Tools       — YES/NO: supports tool calling / function calling
+#   Img         — YES/NO: supports image/multimodal input
+#   Cache       — YES/NO: supports prompt caching
+#   Reasoning   — YES/NO/NO*: supports native reasoning (NO* = supported but
+#                 deliberately disabled for compatibility)
+#
+# Example entries:
+#
+# │ 1 │ openai             │ gpt-5.4                       │ openai:gpt-5.4           │ 200,000  │ 128,000  │ YES   │ YES  │ YES   │ NO        │
+# │ 2 │ openai             │ o4-mini                       │ openai:o4-mini           │ 200,000  │ 100,000  │ YES   │ YES  │ NO    │ YES       │
+# │ 3 │ anthropic          │ claude-opus-4-7               │ anth:claude-opus-4-7     │ 200,000  │ 32,768   │ YES   │ YES  │ YES   │ NO        │
+# │ 4 │ anthropic          │ claude-sonnet-4-6             │ anth:claude-sonnet-4-6   │ 200,000  │ 32,768   │ YES   │ YES  │ YES   │ NO        │
+# │ 5 │ local              │ llama-4-maverick              │ local:llama-4            │ 131,072  │ 8,192    │ YES   │ YES  │ NO    │ NO        │
+#
+# DISPLAY NAME CONVENTION: <provider-short-prefix>:<model-short-name>
+#   Use a 2-5 character prefix that uniquely identifies the provider.
+#   The model short name should be readable and distinguishable.
+
+# =============================================================================
+# PROVIDER DETAILS
+# =============================================================================
+
+## PROVIDER SECTION FORMAT __________________________________________________
+#
+# For each provider defined in the summary table, create a detail section:
+#
+# ## <provider-name> _________________________________________________________
+# # Tier:        <service tier / classification>
+# # Endpoint:    <API base URL>
+# # Key env:     <ENVIRONMENT_VARIABLE_NAME>
+# # Prefix:      <2-5 char display prefix>
+# # Cross-tool:  <which agents support this provider>
+# # Models:      <count> — <comma-separated list of models>
+# # Notes:       <freeform notes, caveats, special behavior>
+#
+# Include model-specific notes like native reasoning behavior,
+# caching specifics, multimodal capabilities, and compatibility
+# considerations.
+
+## EXAMPLE PROVIDER _________________________________________________________
+# Tier:        Example
+# Endpoint:    https://api.example.com/v1
+# Key env:     EXAMPLE_API_KEY
+# Prefix:      ex
+# Cross-tool:  All agents (openai_compatible format)
+# Models:      2  —  example-model-v1, example-model-v2
+# Notes:       This is a provider section template. In a real providers.txt,
+#              replace with actual provider documentation.
+
+# =============================================================================
+# CROSS-TOOL CONFIGURATION MATRIX
+# =============================================================================
+# Format:
+# │ Provider    │ Agent1 │ Agent2 │ Agent3 │ ... │
+#
+# Documents which agents support each provider. All providers using the
+# standard OpenAI-compatible API format (POST /v1/chat/completions) work
+# with any tool that supports custom OpenAI-compatible endpoints.
+#
+# Example:
+#
+# │ Provider    │ Hermes │ DeepAgents │ Zed    │ kilo │ crush │ pi  │ goose │ dcode │ cline │ qwen  │
+# │-------------+--------+------------+--------+------+-------+-----+-------+-------+-------+-------│
+# │ your-prov   │ YES    │ YES        │ custom │ YES  │ YES   │ YES │ YES   │ YES   │ YES   │ YES   │
+#
+# Notes:
+# - "YES" = works out of the box with the agent's native provider config
+# - "custom" = requires custom provider definition (e.g., Zed custom provider)
+# - "—" = not tested or not supported
+
+# =============================================================================
+# FORMAT SPECIFICATION
+# =============================================================================
+#
+# VERSION:        2.0.0
+# SCHEMA:         https://agentsstandard.com/schemas/providers.txt
+# MIME:           text/plain; charset=utf-8
+# ENCODING:       UTF-8
+# LINE ENDINGS:   LF (\n)
+#
+# PARSING RULES:
+#   1. Lines starting with `# ` are descriptive comments (human documentation)
+#   2. Sections are delimited by `# ===...===` headers
+#   3. Provider summary: pipe-delimited table under `# PROVIDER SUMMARY TABLE`
+#   4. Model specification: pipe-delimited TSV table under `# MASTER MODEL SPECIFICATION`
+#   5. Provider details: `## <name> ___...___` sections with `# Key: Value` fields
+#   6. Cross-tool matrix: pipe-delimited table under `# CROSS-TOOL CONFIGURATION MATRIX`
+#   7. Numeric values may include commas for readability (e.g., "1,000,000")
+#   8. Boolean fields use YES/NO (case-sensitive)
+#   9. The `NO*` reasoning value means "supported but deliberately disabled"
+#
+# AGENT INTEGRATION:
+#   Agents should:
+#   1. Check for ~/.agents/providers.txt at startup
+#   2. Parse provider sections into internal config
+#   3. Merge with agent-specific provider overrides
+#   4. Use the cross-tool matrix to identify compatible providers
+#
+#   Tool makers should:
+#   1. Read ~/.agents/providers.txt as a base configuration
+#   2. Maintain their own per-tool config files for overrides
+#   3. Fall back to providers.txt for unknown providers
+#   4. Contribute provider updates back to the standard
+#
+# RELATIONSHIP TO OTHER STANDARDS:
+#   - ~/.agents/AGENTS.md     → behavioral rules (how agents should behave)
+#   - ~/.agents/mcp-settings.json → MCP server catalog (what tools are available)
+#   - ~/.agents/providers.txt     → LLM provider config (which models to use)
+#   - ~/.agents/skills/           → Agent skills (what agents can do)
+#
+# CONTRIBUTING:
+#   Submit provider updates, new models, and corrections via:
+#   https://github.com/nbiish/agents-standard/issues/new?template=provider-update.md
+#
+#   See CONTRIBUTING.md for the full contribution protocol.
+#   See providers.json for the machine-readable structured provider data.
+#
+# =============================================================================
+# END OF TEMPLATE
+# =============================================================================

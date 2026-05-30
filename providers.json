@@ -1,7 +1,12 @@
 {
   "$schema": "https://agentsstandard.com/schemas/providers.json",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "LLM provider API endpoints, pricing, and referral codes for AI coding agents",
+  "providers_txt": {
+    "location": "~/.agents/providers.txt",
+    "example": "providers.example.txt",
+    "description": "Human-readable TSV provider config reference. See providers.example.txt for the full format specification. Tool makers: read this as a base config, maintain your own per-tool overrides."
+  },
   "providers": {
     "anthropic": {
       "name": "Anthropic",
