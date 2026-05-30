@@ -1,5 +1,5 @@
 # Cloudflare Pages configuration
 # Static site — no build step needed
-name = "agentsstandard-dot-com"
+name = "agentsstandard"
 compatibility_date = "2026-05-26"
 pages_build_output_dir = "."
