@@ -1,10 +1,10 @@
 {
   "$schema": "https://agentsstandard.com/schema.json",
   "name": "AGENTS.md",
-  "version": "1.4.0",
-  "description": "Hierarchical configuration standard for AI coding agents — one convention, all agents",
-  "loading_model": "scoped-concatenation",
-  "loading_description": "AGENTS.md files are concatenated (not replaced) within a bounded scope. The project root (inherited terminal cwd) acts as a ceiling — agents never traverse above it. Global rules form the immutable base. Each tier within the project appends context-specific rules.",
+  "version": "2.0.0",
+  "description": "Hierarchical configuration standard for AI coding agents — one directory, four resource types, all agents",
+  "loading_model": "unified-cascade",
+  "loading_description": "Four resource types loaded in a single pass: rules (AGENTS.md, concatenate), skills (SKILL.md, override-by-name), MCP (mcp-settings.json/.mcp.json, merge-by-server-name), providers (providers.txt, global-reference-only). The project root (inherited terminal cwd) acts as a ceiling — agents never traverse above it. Global rules form the immutable base. Each tier within the project appends context-specific rules. Skills cascade from global to project scope with same-name override. MCP uses dual-layer architecture: catalog (private) → live config (committable). Providers are global-only with agent-specific overrides.",
   "project_root_detection": {
     "method": "shell_inheritance",
     "description": "The project root is the directory the shell was opened in (inherited terminal cwd), not the filesystem root. Agents detect this via the shell's initial $PWD or an AGENTS_ROOT env var. This prevents accidentally reading AGENTS.md files from parent directories (e.g. a github repo management AGENTS.md one level up).",
@@ -45,7 +45,8 @@
       "path": "~/.agents/",
       "contents": {
         "AGENTS.md": "Global behavior rules (this standard)",
-        "mcp-settings.json": "MCP server configs shared across all agents",
+        "mcp-settings.json": "MCP server CATALOG (definitions with keys — PRIVATE, never fed to agents)",
+        "providers.txt": "LLM provider and model reference (global only, no cascade)",
         "skills/": "Global agent skills (**/SKILL.md)"
       }
     },
@@ -53,10 +54,10 @@
       "path": "{project_root}/.agents/",
       "contents": {
         "AGENTS.md": "Project base rules (tech stack, deployment, committed guidelines)",
-        "mcp-settings.json": "Project-specific MCP server configs",
-        "skills/": "Project-specific agent skills (**/SKILL.md)"
+        "skills/": "Project-specific agent skills (**/SKILL.md) — override global skills by name",
+        ".mcp.json": "Project MCP live config (at project root, NOT in .agents/ — uses ${ENV_VAR} refs, committable)"
       },
-      "note": "Project base rules live in .agents/AGENTS.md. Project active task/PRD rules go in {project_root}/AGENTS.md — visible at repo root, compatible with how 23+ tools already read rules."
+      "note": "Project base rules live in .agents/AGENTS.md. Project active task/PRD rules go in {project_root}/AGENTS.md — visible at repo root, compatible with how 23+ tools already read rules. .mcp.json lives at project root (not in .agents/) per Claude Code convention."
     }
   },
   "singular_rules_fallback": {
@@ -89,7 +90,17 @@
     }
   },
   "conflict_policy": "most-specific-wins (folder > project > global)",
-  "inheritance": "extend",
+  "inheritance": {
+    "rules": "concatenate (extend)",
+    "skills": "override-by-name (project replaces global same-name skill)",
+    "mcp": "merge-by-server-name (agent-specific extends project)",
+    "providers": "global-reference-only (agent-specific overrides)"
+  },
+  "conformance_levels": {
+    "minimal": "Single rules file (global or project active). Skills, MCP, providers not required.",
+    "standard": "Full 5-tier rules cascade + global/project skills loading + project .mcp.json loading.",
+    "full": "Full cascade + skills override resolution + MCP agent-specific merge + providers.txt loading."
+  },
   "format": "text/markdown",
   "agents": {
     "pi": {

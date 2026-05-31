@@ -1,29 +1,165 @@
 # agents-standard
 
 > Specification for the AGENTS.md hierarchical configuration standard.
-> One file convention, five-tier loading, all agents.
+> One directory, four resource types, five-tier loading, all agents.
 > This project spans two repositories: the specification/CLI repository (nbiish/agents-standard) and the website repository (nbiish/agentsstandard-dot-com).
 
 ## Version
 
-2.0.0-alpha
+2.0.0
 
 ## The Standard
 
-The standard unifies project instructions by separating **what/why** (Project PRD) from **how** (Behavioral Rules):
+The standard unifies project instructions by separating **what/why** (Project PRD) from **how** (Behavioral Rules) and coordinating four resource types from a single `~/.agents/` directory:
 
 * **`llms.txt` (Project PRD)**: Located at `{project_root}/llms.txt`. Defines active goals, roadmap, and scope.
 * **`AGENTS.md` (Behavioral Cascade)**: Cascades across four scopes (`Global Base`, `Project Base`, `Project Active`, `Folder`). Defines safety, coding preferences, and guidelines.
+* **`**/SKILL.md` (Agent Skills)**: Self-contained capability modules at global and project scope.
+* **`mcp-settings.json` / `.mcp.json` (MCP Servers)**: External tool server definitions with dual-layer architecture.
+* **`providers.txt` (LLM Providers)**: Provider and model reference at global scope.
 
-## Resolution Order
+## Unified Loading Protocol
 
-1. Load `~/.agents/AGENTS.md` (global base — loaded first, user safety/preferences)
-2. Load `{project_root}/llms.txt` (project PRD — loaded second, functional requirements)
-3. Load `{project_root}/.agents/AGENTS.md` (project base rules — loaded third, committed guidelines)
-4. Load `{project_root}/AGENTS.md` (project active rules — loaded fourth, active constraints, symlinked)
-5. Load `{cwd}/AGENTS.md` if cwd is within project boundary (folder-specific rules — loaded last, component overrides)
+All four resource types are loaded in a single pass with defined inheritance semantics.
+
+### Resource Type Summary
+
+| Resource | Format | Inheritance Model | Scopes |
+|----------|--------|------------------|--------|
+| **Rules** (AGENTS.md) | Plain Markdown | **Concatenate** (extend) | 5-tier: global → PRD → base → active → folder |
+| **Skills** (**/SKILL.md) | Markdown + optional YAML frontmatter | **Override by name** | 2-tier: global → project |
+| **MCP** (mcp-settings.json / .mcp.json) | JSON (`"mcpServers"` root key) | **Merge by server name** | 3-tier: catalog → project → agent-specific |
+| **Providers** (providers.txt) | TSV reference document | **Global reference only** | 1-tier: global |
+
+### Resolution Order
+
+1. Load `~/.agents/AGENTS.md` (global base — user safety/preferences)
+2. Load `{project_root}/llms.txt` (project PRD — functional requirements)
+3. Load `{project_root}/.agents/AGENTS.md` (project base rules — committed guidelines)
+4. Load `{project_root}/AGENTS.md` (project active rules — active constraints, symlinked)
+5. Load `{cwd}/AGENTS.md` if cwd is within project boundary (folder-specific rules — component overrides)
+
+**Skills** load at steps 1 and 3 (global `~/.agents/skills/**/SKILL.md`, then project `{root}/.agents/skills/**/SKILL.md`). Project skills override global skills with the same directory name.
+
+**MCP** loads at step 3 (project `{root}/.mcp.json`). The global catalog (`mcp-settings.json`) is never fed to agents directly — it exists for `mcp pull` operations only. Agent-specific MCP configs extend the project set.
+
+**Providers** load at step 1 only (`~/.agents/providers.txt`). No cascade.
 
 Most specific rules win (folder > active > project base > global). Each layer extends, not replaces.
+
+### Loading Algorithm (Pseudocode)
+
+```
+function LoadAgentsConfig():
+    // Phase 0: Environment Resolution
+    home         = expand("~")
+    agents_path  = env("AGENTS_PATH")     ?? home + "/.agents/AGENTS.md"
+    agents_depth = clamp(int(env("AGENTS_DEPTH") ?? "3"), 1, 10)
+    agents_root  = env("AGENTS_ROOT")     ?? detectProjectRoot()
+    cwd          = currentWorkingDirectory()
+
+    state = {
+        rules:     [],    // ordered rule blocks
+        skills:    {},    // name → { path, content, scope }
+        mcp:       {},    // server_name → { config, scope, source }
+        providers: null,  // single providers.txt content or null
+        metadata:  { loaded_files: [], errors: [], warnings: [] }
+    }
+
+    // Phase 1: Global Scope (no dependencies)
+    if fileExists(agents_path):
+        state.rules.push({ scope: "global", content: readFile(agents_path) })
+    for each SKILL.md in glob("~/.agents/skills/**/SKILL.md"):
+        state.skills[name] = { content, scope: "global" }
+    if fileExists("~/.agents/providers.txt"):
+        state.providers = { content: readFile(...) }
+    // mcp-settings.json → metadata only (NOT runtime)
+
+    // Phase 2: Project Scope (requires project root detection)
+    if project_root detected:
+        state.rules.push({ scope: "project_prd", content: readFile("llms.txt") })
+        state.rules.push({ scope: "project_base", content: readFile(".agents/AGENTS.md") })
+        state.rules.push({ scope: "project_active", content: readFile("AGENTS.md") })
+        for each SKILL.md in glob(".agents/skills/**/SKILL.md"):
+            state.skills[name] = { content, scope: "project" }  // overrides global
+        for server in parseJSON(".mcp.json").mcpServers:
+            state.mcp[name] = { config, scope: "project" }
+
+    // Phase 3: Folder Scope (requires depth >= 4)
+    if agents_depth >= 4:
+        for each directory between project_root and cwd:
+            if fileExists("AGENTS.md"):
+                state.rules.push({ scope: "folder", content })
+
+    // Phase 4: Composition
+    rules     = concat(all rule blocks in order)
+    skills    = merge global + project (project overrides by name)
+    mcp       = project .mcp.json (disabled:true excluded)
+    providers = global providers.txt
+
+    return { rules, skills, mcp, providers, metadata }
+```
+
+### Inheritance Rules
+
+**Rules — Extend (Concatenate):**
+`rules = global ++ project_prd ++ project_base ++ project_active ++ folder`
+No rule is ever removed. Later rules override earlier by position/specificity. Same model as `.editorconfig`, `.eslintrc`, `.gitignore`.
+
+**Skills — Override by Name:**
+Keyed by directory basename. If `{project}/.agents/skills/pqc-secrets/SKILL.md` exists, it completely replaces `~/.agents/skills/pqc-secrets/SKILL.md`. No concatenation. Skills exist at global and project scopes only — no folder-level skills.
+
+**MCP — Merge by Server Name:**
+Global catalog (`mcp-settings.json`) is NEVER runtime — it's the definition store for `mcp pull`. Project live (`.mcp.json`) IS runtime. Agent-specific configs extend the project set. Same-name server: agent-specific wins. `disabled: true` servers excluded.
+
+**Providers — Global Reference Only:**
+`providers.txt` at `~/.agents/providers.txt` only. No cascade. Agent-specific provider configs override providers.txt.
+
+### Conflict Resolution Matrix
+
+| Resource | Global | Project PRD | Project Base | Project Active | Folder | Agent-Specific |
+|----------|--------|-------------|--------------|----------------|--------|----------------|
+| **Rules** | Base (loaded first) | Appended after global | Appended after PRD | Appended after base | Appended after active | Symlink bridge |
+| **Skills** | Base set | N/A | Override by name | N/A | N/A | N/A |
+| **MCP** | Catalog only (not runtime) | N/A | N/A | `.mcp.json` runtime | N/A | Merge-extends; same-name overrides |
+| **Providers** | `providers.txt` loaded | N/A | N/A | N/A | N/A | Agent config overrides |
+
+### Edge Cases
+
+- **Missing files**: Every file is optional. Skip, continue. Never fail.
+- **Permission errors**: Log error in metadata, skip, continue.
+- **Circular symlinks**: Detect via seen-paths set, skip with error.
+- **Depth exceeded**: Silent truncation. Only load allowed levels.
+- **Duplicate content**: AGENTS.md symlink to .agents/AGENTS.md → loaded twice intentionally. Full implementations MAY deduplicate via `realpath()`.
+- **No project root**: Global-only mode (equivalent to depth=1).
+- **MCP format conflict**: Normalize to `"mcpServers"` convention. Agent adapters handle translation.
+
+### Security Invariants
+
+1. **No raw API keys in runtime configs.** `.mcp.json` uses `${ENV_VAR}` refs only.
+2. **No secrets in rules.** AGENTS.md (all scopes) must never contain keys/tokens.
+3. **No secrets in skills.** SKILL.md may reference `${ENV_VAR}` names only.
+4. **No secrets in providers.txt.** Defines endpoints and env var names, never values.
+5. **No traversal above project root.** Prevents parent directory injection.
+6. **Global rules are immutable base.** Project/folder extend but cannot weaken global safety.
+
+## Conformance Levels
+
+| Level | Rules | Skills | MCP | Providers | Typical Agents |
+|-------|-------|--------|-----|-----------|----------------|
+| **Minimal** | Single file (global or project active) | Not required | Not required | Not required | Single-file agents |
+| **Standard** | Full 5-tier cascade | Global + project loading | Project `.mcp.json` loading | Not required | Most agents |
+| **Full** | Full 5-tier cascade | Global + project + override resolution | Project + agent-specific merge | Global providers.txt | Native agents, CLI |
+
+## Project Root Detection
+
+The project root is detected by walking up from the shell's initial `$PWD` looking for `.git`, `.agents`, or `llms.txt`. The `AGENTS_ROOT` env var overrides this detection.
+
+```
+Priority: AGENTS_ROOT env → walk-up from shell cwd
+Markers:  .git / .agents / llms.txt
+Ceiling:  Never traverse above project root. ~ is the global ceiling.
+```
 
 ## Agent Coverage
 
@@ -145,7 +281,7 @@ The near-universal root key is `"mcpServers"` (Claude Code, Cursor, Windsurf, Qw
 
 ```
 .agents status                   Full system health report
-.agents status --json            Machine-readable JSON
+.agents status --json            Machine-readable JSON (all 4 resource types)
 .agents doctor --fix             Auto-fix common issues
 ```
 
@@ -156,7 +292,40 @@ Every command supports `--json` for programmatic consumption. Exit codes: 0=succ
 ```
 .agents rules list --json     → [{"key":"claude-code","name":"Claude Code","status":"linked",...}]
 .agents mcp catalog --json    → {"servers":[{...}],"summary":{...}}
-.agents status --json         → {"healthy":true,"checks":[...],"issues":[]}
+.agents status --json         → {"healthy":true,"checks":[...],"issues":[],"rules":{...},"skills":{...},"mcp":{...},"providers":{...}}
+```
+
+### JSON Output Schema
+
+The unified `--json` output includes all four resource types:
+
+```json
+{
+  "version": "2.0.0",
+  "project_root": "/path/to/project",
+  "cwd": "/path/to/project/src/api",
+  "agents_depth": 3,
+  "rules": {
+    "content": "# concatenated rules...",
+    "blocks": [
+      { "scope": "global", "source": "~/.agents/AGENTS.md", "lines": 45 },
+      { "scope": "project_prd", "source": "llms.txt", "lines": 120 },
+      { "scope": "project_base", "source": ".agents/AGENTS.md", "lines": 30 },
+      { "scope": "project_active", "source": "AGENTS.md", "lines": 80 }
+    ]
+  },
+  "skills": {
+    "pqc-secrets": { "scope": "global", "path": "~/.agents/skills/pqc-secrets/SKILL.md" }
+  },
+  "mcp": {
+    "servers": { "brave-search": { "type": "stdio", "command": "npx" } },
+    "source": ".mcp.json",
+    "catalog_path": "~/.agents/mcp-settings.json"
+  },
+  "providers": { "source": "~/.agents/providers.txt", "loaded": true },
+  "errors": [],
+  "warnings": []
+}
 ```
 
 ### Backward Compatibility
@@ -182,8 +351,9 @@ Default mode when run without a subcommand in a TTY. Tabbed dashboard with:
 ```
 cli/
 ├── index.js              # Command router, argument parser
-├── package.json          # Bin definitions, v2.0.0-alpha
+├── package.json          # Bin definitions, v2.0.0
 ├── lib/
+│   ├── loader.js         # Unified loading algorithm (all 4 resource types)
 │   ├── constants.js      # 30-agent registry, MCP_FORMATS, ENV_VAR_MAP
 │   ├── fs-helpers.js     # Symlink, directory, file utilities
 │   ├── catalog.js        # mcp-settings.json CRUD + validation
@@ -193,11 +363,12 @@ cli/
 ├── commands/
 │   ├── rules.js          # AGENTS.md management (TUI + headless)
 │   ├── mcp.js            # MCP catalog & project management
-│   ├── skills.js         # Skill discovery
+│   ├── skills.js         # Skill discovery (uses unified loader)
 │   ├── setup.js          # Project bootstrap
-│   ├── status.js         # Health check / doctor
+│   ├── status.js         # Health check / doctor (uses unified loader)
 │   └── tui.js            # Interactive dashboard
 └── test/
+    ├── loader.test.js    # 34 tests — unified loading algorithm
     ├── rules.test.js     # 13 tests
     └── mcp.test.js       # 20 tests
 ```
@@ -259,13 +430,14 @@ Key endpoint note: Per Augment docs, the Augment Code API is full Anthropic Mess
 ~/.agents/
 ├── AGENTS.md              <- Behavior rules (global base, loaded first)
 ├── mcp-settings.json      <- MCP server CATALOG (definitions with keys — PRIVATE)
+├── providers.txt          <- LLM provider reference (global only, no cascade)
 └── skills/                <- Agent Skills
     └── **/SKILL.md
 
 # Project .agents/ (tooling + project base rules)
 {project}/.agents/
 ├── AGENTS.md              <- Project base rules (committed, tech stack/deployment)
-├── skills/                <- Project-specific agent skills
+├── skills/                <- Project-specific agent skills (override global by name)
 │   └── **/SKILL.md
 └── .mcp.json              <- at project root (not in .agents/ — Claude Code convention)
 ```
@@ -292,7 +464,7 @@ This is an open standard. Both humans and AI agents can contribute.
 4. Submit a PR with the updated agents.json following the schema
 5. Include a link to the official docs as verification
 
-All PRs must pass: `node cli/test/rules.test.js && node cli/test/mcp.test.js`
+All PRs must pass: `node cli/test/rules.test.js && node cli/test/mcp.test.js && node cli/test/loader.test.js`
 
 ## Environment Variables
 
@@ -300,6 +472,7 @@ All PRs must pass: `node cli/test/rules.test.js && node cli/test/mcp.test.js`
 |----------|---------|---------|
 | `AGENTS_DEPTH` | Controls directory tiers for AGENTS.md loading | `3` |
 | `AGENTS_PATH` | Override global AGENTS.md path | `~/.agents/AGENTS.md` |
+| `AGENTS_ROOT` | Override project root detection | inherited from shell's initial `$PWD` |
 
 ## Format
 
@@ -325,7 +498,25 @@ All four live in `~/.agents/`. They complement each other.
 
 ## Changelog
 
-### v2.0.0-alpha (May 29, 2026)
+### v2.0.0 (May 30, 2026)
+
+**Unified Loading Protocol:**
+- Defined loading algorithm for all 4 resource types (rules, skills, MCP, providers)
+- Specified inheritance semantics per resource type: rules=concatenate, skills=override-by-name, MCP=merge-by-server-name, providers=global-reference-only
+- Added conflict resolution matrix for all scope × resource combinations
+- Defined composition order with dependency graph
+- Added edge case handling (missing files, permission errors, circular symlinks, depth limits, format conflicts)
+- Added 6 security invariants (no raw keys in runtime, no secrets in rules/skills/providers, no traversal above root, immutable global base)
+- Added 3 conformance levels (Minimal, Standard, Full)
+- Added unified JSON output schema for --json mode covering all 4 resource types
+
+**CLI v2.0.0:**
+- NEW: `cli/lib/loader.js` — unified loading algorithm with `load()`, `loadRules()`, `loadSkills()`, `loadMcp()`
+- NEW: `cli/test/loader.test.js` — 34 tests covering all phases, inheritance, edge cases, conformance
+- Updated `cli/commands/skills.js` — uses unified loader, shows override-by-name info
+- Updated `cli/commands/status.js` — reports all 4 resource types in health check
+- 67 total tests passing (34 loader + 13 rules + 20 MCP)
+- Zero-dependency — Node.js >=16 built-ins only
 
 **providers.txt Standard:**
 - Integrated `~/.agents/providers.txt` as the standardized LLM provider config reference
@@ -333,7 +524,7 @@ All four live in `~/.agents/`. They complement each other.
 - Updated `providers.json` to v2.0.0 with `providers_txt` reference
 - Added providers.txt entry schema and contribution guide to `CONTRIBUTING.md`
 - Added provider-update GitHub issue template
-- Documented the design principle: providers.txt is a base standard that agents CAN read, not a replacement for agent-specific provider configuration. Tool makers keep their own per-tool configs for overrides.
+- Documented the design principle: providers.txt is a base standard that agents CAN read, not a replacement for agent-specific provider configuration.
 
 **MCP Config Convention:**
 - Documented cross-tool MCP config analysis: `.mcp.json` is the most common project-level filename
@@ -349,15 +540,8 @@ All four live in `~/.agents/`. They complement each other.
 - Keys stored encrypted in `~/.config/pqc-secrets/secrets.bundle.json`, private key in macOS Keychain
 - Encrypted-at-rest key flow: encrypt → load → ${VAR} refs → pull
 
-**CLI v2.0.0-alpha:**
-- 30-agent registry, modular command architecture
-- Rules TUI with interactive navigation (↑↓/space/enter/q/d/g)
-- MCP catalog CRUD, project config management, health checks
-- Zero-dependency — Node.js >=16 built-ins only
-- 33 passing tests
-
 **Documentation:**
-- README.md with v2.0.0 overview and security workflow
+- README.md with v2.0.0 overview, unified loading protocol, and security workflow
 - CONTRIBUTING.md with open-code contribution protocol for humans AND AI agents
 - GitHub issue templates: agent-update, new-agent, spec-change, mcp-server, bug, provider-update
 - PR template with verification checklist

@@ -1,433 +1,320 @@
 #!/usr/bin/env node
-// agents-standard — Manage AGENTS.md symlinks and configuration
+// .agents — Manage AGENTS.md rules, MCP servers, skills, and agent configuration
+// Primary bin: .agents   Legacy aliases: agents-standard, agents
 // Zero dependencies. Node.js >=16 built-ins only.
 
-const fs = require('fs');
 const path = require('path');
-const os = require('os');
-const readline = require('readline');
 
-// ── Configuration ──────────────────────────────────────────────────────────
+// ── Version ──────────────────────────────────────────────────────────────────
 
-const HOME = os.homedir();
-const GLOBAL_AGENTS = path.join(HOME, '.agents', 'AGENTS.md');
-const DEPTH_ENV = 'AGENTS_DEPTH';
-const DEFAULT_DEPTH = 3;
+const VERSION = '2.0.0-alpha';
 
-const AGENTS = [
-  { key: 'pi',             name: 'Pi',               global: null,                                                      note: 'native — already reads ~/.agents/AGENTS.md' },
-  { key: 'claude-code',    name: 'Claude Code',        global: path.join(HOME, '.claude', 'CLAUDE.md') },
-  { key: 'agy',            name: 'Agy / Gemini CLI',   global: path.join(HOME, '.gemini', 'GEMINI.md') },
-  { key: 'codex',          name: 'OpenAI Codex',       global: path.join(HOME, '.codex', 'instructions.md') },
-  { key: 'cursor',         name: 'Cursor',             global: path.join(HOME, '.cursor', 'rules', 'agents-standard') },
-  { key: 'github-copilot', name: 'GitHub Copilot',     global: null,                                                      note: 'project-only — no global file' },
-  { key: 'windsurf',       name: 'Windsurf',           global: path.join(HOME, '.codeium', 'windsurf', 'rules') },
-  { key: 'cline',          name: 'Cline',              global: path.join(HOME, '.cline', 'cline_rules') },
-  { key: 'roo',            name: 'Roo Code',           global: path.join(HOME, '.roo', 'rules', 'agents-standard') },
-  { key: 'kiro',           name: 'Kiro',               global: path.join(HOME, '.kiro', 'kiro.md') },
-  { key: 'augment',        name: 'Augment',            global: path.join(HOME, '.augment', 'guidelines') },
-  { key: 'goose',          name: 'Goose',              global: path.join(HOME, '.config', 'goose', 'goosehints') },
-  { key: 'junie',          name: 'Junie',              global: path.join(HOME, '.junie', 'guidelines.md') },
-  { key: 'trae',           name: 'Trae',               global: path.join(HOME, '.trae', 'rules', 'agents-standard') },
-  { key: 'crush',          name: 'Crush',              global: path.join(HOME, '.config', 'crush', 'crush.md') },
-  { key: 'hermes-agent',   name: 'Hermes Agent',       global: path.join(HOME, '.hermes', 'SOUL.md') },
-  { key: 'mini',           name: 'MiniCC',             global: path.join(HOME, '.minicc', 'AGENTS.md') },
-  { key: 'dcode',          name: 'Deep Agents (dcode)', global: path.join(HOME, '.deepagents', 'AGENTS.md') },
-  { key: 'warp',           name: 'Warp',               global: null,                                                      note: 'settings UI — no global file' },
-  { key: 'aider',          name: 'Aider',              global: path.join(HOME, '.aider.conf.yml'),                       note: 'YAML format — manual setup' },
-  { key: 'continue',       name: 'Continue',           global: path.join(HOME, '.continue', 'config.json'),               note: 'JSON format — manual setup' },
-  { key: 'zed',            name: 'Zed',                global: path.join(HOME, '.config', 'zed', 'AGENTS.md') },
-  { key: 'codewhale',      name: 'CodeWhale',          global: null,                                                      note: 'native — already reads ~/.agents/AGENTS.md' },
-];
+// ── Help Text ────────────────────────────────────────────────────────────────
 
-// ── State ──────────────────────────────────────────────────────────────────
+const HELP = `
+  .agents v${VERSION} — Manage your multi-agent configuration
 
-let cursorIdx = 0;
-let agentStates = [];    // { agent, target, isLinked, shouldLink }
-let depth = DEFAULT_DEPTH;
-let globalPath = GLOBAL_AGENTS;
-let message = '';
-let running = true;
+  Usage:
+    .agents {command} [flags]
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+  Commands:
+    rules                    Manage AGENTS.md rules & symlinks
+    mcp                      Manage MCP server catalogs and project configs
+    skills                   Manage agent skills
+    setup                    Bootstrap .agents/ in current project
+    status                   System-wide health check
+    tui                      Interactive terminal dashboard (default)
+    version                  Print version
+    help                     Show this help
 
-function resolveTarget(target) {
-  if (!target) return null;
-  // Expand ~ to HOME (handles paths that might be read from config)
-  return target.replace(/^~/, HOME);
-}
+  Rules subcommands:
+    .agents rules list       List all agents & link status
+    .agents rules link       Open TUI to toggle symlinks
+    .agents rules link --all Link all agents (headless)
+    .agents rules unlink     Unlink all agents
+    .agents rules depth [N]  Get/set AGENTS_DEPTH (1-10)
+    .agents rules path [p]   Get/set AGENTS_PATH
 
-function isSymlinkedTo(target, source) {
-  if (!target || !source) return false;
-  try {
-    const link = fs.readlinkSync(target);
-    return link === source;
-  } catch {
-    return false;
-  }
-}
+  MCP subcommands:
+    .agents mcp catalog      List servers in global catalog
+    .agents mcp catalog toggle <name>  Enable/disable a server
+    .agents mcp catalog remove <name>  Remove from catalog
+    .agents mcp project      List servers in project .mcp.json
+    .agents mcp pull <name>  Pull server from catalog into project
+    .agents mcp pull --all   Pull all enabled servers
+    .agents mcp push <name>  Remove from project config
+    .agents mcp health       Check server environment variables
+    .agents mcp find <q>     Search for MCP servers
 
-function ensureDir(filePath) {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
+  Skills subcommands:
+    .agents skills list      List available skills
+    .agents skills info <n>  Show SKILL.md content
 
-function hasNative(agent) {
-  return agent.key === 'pi';
-}
+  Setup:
+    .agents setup            Bootstrap project interactively
+    .agents setup --quick    Non-interactive (use defaults)
+    .agents setup --mcp      Only set up .mcp.json
+    .agents setup --rules    Only set up AGENTS.md
 
-function agentLabel(agent) {
-  if (hasNative(agent)) return 'native (no symlink needed)';
-  if (!agent.global) return agent.note || 'project-only or UI-based';
-  return agent.global.replace(HOME, '~');
-}
+  Status:
+    .agents status           Print health report
+    .agents doctor           Check and fix issues
+    .agents doctor --fix     Auto-fix common issues
 
-// ── TUI Rendering ──────────────────────────────────────────────────────────
+  Flags (all commands):
+    --json                   Output as JSON (headless/API mode)
+    --project <path>         Target a specific project directory
+    --global                 Operate on ~/.agents/
 
-function hideCursor() { process.stdout.write('\x1b[?25l'); }
-function showCursor() { process.stdout.write('\x1b[?25h'); }
-function clearScreen() { process.stdout.write('\x1b[2J\x1b[H'); }
-function moveTo(row, col) { process.stdout.write(`\x1b[${row};${col}H`); }
+  Legacy flags (mapped to new subcommands):
+    --list                   → .agents rules list
+    --link-all, -a           → .agents rules link
+    --depth N                → .agents rules depth N
+    --version, -v            → .agents version
+    --help, -h               → .agents help
+`;
 
-const C = {
-  reset:   '\x1b[0m',
-  dim:     '\x1b[2m',
-  bold:    '\x1b[1m',
-  green:   '\x1b[32m',
-  yellow:  '\x1b[33m',
-  cyan:    '\x1b[36m',
-  magenta: '\x1b[35m',
-  invert:  '\x1b[7m',
-  hide:    '\x1b[8m',
-};
+// ── Command Router ────────────────────────────────────────────────────────────
 
-function render() {
-  clearScreen();
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  const result = {
+    command: null,
+    subcommand: null,
+    sargs: [],       // subcommand args
+    flags: {
+      json: false,
+      project: null,
+      global: false,
+      quick: false,
+      mcp: false,
+      rules: false,
+      skills: false,
+      fix: false,
+      all: false,
+      depth: null,
+      newPath: null,
+      doctor: false,
+    },
+  };
 
-  // Header
-  process.stdout.write(`${C.bold}${C.cyan}  agents-standard${C.reset}  ${C.dim}v1.3.0${C.reset}\n`);
-  process.stdout.write(`  ${C.dim}Global:${C.reset} ${globalPath.replace(HOME, '~')}\n`);
-  process.stdout.write(`  ${C.dim}Depth:${C.reset}  ${C.yellow}${depth}${C.reset} (${depthDesc(depth)})\n`);
-  process.stdout.write(`  ${C.dim}────────────────────────────────────────────────────${C.reset}\n\n`);
+  let i = 0;
 
-  // Column headers
-  process.stdout.write(`  ${C.dim}${'Status'.padEnd(8)} ${'Agent'.padEnd(22)} Target${C.reset}\n`);
-  process.stdout.write(`  ${C.dim}──────  ─────────────────────  ──────────────────────────────────────────${C.reset}\n`);
-
-  // Agent list
-  const pageSize = process.stdout.rows - 10;
-  const startIdx = Math.max(0, cursorIdx - Math.floor(pageSize / 2));
-  const endIdx = Math.min(agentStates.length, startIdx + pageSize);
-
-  for (let i = startIdx; i < endIdx; i++) {
-    const s = agentStates[i];
-    const isCursor = i === cursorIdx;
-    const prefix = isCursor ? ` ${C.invert}` : '  ';
-    const suffix = isCursor ? C.reset : '';
-
-    let status;
-    if (hasNative(s.agent)) {
-      status = `${C.green}● native${C.reset}`;
-    } else if (!s.agent.global) {
-      status = `${C.dim}· n/a${C.reset}`;
-    } else if (s.isLinked) {
-      status = `${C.green}● linked${C.reset}`;
-    } else {
-      status = `${C.dim}○ unlinked${C.reset}`;
-    }
-
-    const name = s.agent.name.padEnd(22);
-    const target = agentLabel(s.agent);
-
-    process.stdout.write(`${prefix}${status}  ${name}${target}${suffix}\n`);
+  // Parse command
+  if (i < args.length && !args[i].startsWith('-')) {
+    result.command = args[i];
+    i++;
   }
 
-  // Spacer
-  process.stdout.write('\n');
-
-  // Bottom bar — Submit
-  const barY = process.stdout.rows - 2;
-  moveTo(barY, 1);
-  const isApply = cursorIdx === agentStates.length;
-  if (isApply) {
-    process.stdout.write(`${C.invert}  Submit changes  ${C.reset} ${C.green}← press Enter${C.reset}`);
-  } else {
-    process.stdout.write(`${C.dim}  Submit changes  ← navigate here and press Enter${C.reset}`);
-  }
-
-  // Message line
-  moveTo(barY + 1, 1);
-  if (message) {
-    process.stdout.write(`${C.yellow}  ${message}${C.reset}`);
-  } else {
-    process.stdout.write(`  ${C.dim}↑↓ navigate  space toggle  enter submit  q quit  d depth  g global path${C.reset}`);
-  }
-
-  moveTo(barY + 2, 1);
-}
-
-function depthDesc(d) {
-  if (d <= 1) return 'global only';
-  if (d === 2) return 'global + project';
-  if (d === 3) return 'global + project + folder (default)';
-  return `global + project + ${d - 2} intermediate dirs`;
-}
-
-// ── Actions ────────────────────────────────────────────────────────────────
-
-function toggleAgent() {
-  const s = agentStates[cursorIdx];
-  if (!s.agent.global || hasNative(s.agent)) return;
-  s.isLinked = !s.isLinked;
-}
-
-function applyChanges() {
-  let linked = 0;
-  let unlinked = 0;
-  let skipped = 0;
-
-  for (const s of agentStates) {
-    if (!s.agent.global || hasNative(s.agent)) {
-      skipped++;
-      continue;
-    }
-
-    const target = resolveTarget(s.agent.global);
-
-    if (s.isLinked) {
-      // Create global AGENTS.md if it doesn't exist
-      if (!fs.existsSync(globalPath)) {
-        ensureDir(globalPath);
-        fs.writeFileSync(globalPath, `# Global Agent Rules\n# Edit this file to configure behavior for ALL agents.\n# See https://agentsstandard.com\n\n## Identity\nYou are a senior engineer.\n\n## Safety\n- Never hardcode secrets\n- Validate all inputs\n- Use parameterized queries\n`, 'utf-8');
-      }
-
-      ensureDir(target);
-      try {
-        // Remove existing file/symlink if present
-        if (fs.existsSync(target)) {
-          fs.unlinkSync(target);
-        }
-        fs.symlinkSync(globalPath, target);
-        linked++;
-      } catch (err) {
-        message = `Failed to link ${s.agent.name}: ${err.message}`;
-        return;
-      }
-    } else {
-      // Remove symlink if it points to our global AGENTS.md
-      try {
-        if (isSymlinkedTo(target, globalPath)) {
-          fs.unlinkSync(target);
-          unlinked++;
-        }
-      } catch {
-        // File doesn't exist or isn't our symlink — skip
-      }
+  // Parse subcommand (only for commands that have subcommands)
+  const hasSubcommands = ['rules', 'mcp', 'skills', 'setup', 'status'];
+  if (result.command && hasSubcommands.includes(result.command)) {
+    if (i < args.length && !args[i].startsWith('-')) {
+      result.subcommand = args[i];
+      i++;
     }
   }
 
-  // Set AGENTS_DEPTH in shell profile
-  const profileFiles = [
-    path.join(HOME, '.zshenv'),
-    path.join(HOME, '.bashrc'),
-    path.join(HOME, '.profile'),
-  ];
+  // For 'setup' and 'status', remap certain subcommands
+  if (result.command === 'status' && result.subcommand === 'doctor') {
+    result.flags.doctor = true;
+    // consume remaining args for doctor
+    while (i < args.length) {
+      const arg = args[i];
+      if (arg === '--fix') result.flags.fix = true;
+      else if (arg === '--json') result.flags.json = true;
+      i++;
+    }
+    return result;
+  }
 
-  const depthLine = `export AGENTS_DEPTH=${depth}   # agents-standard`;
-  for (const pf of profileFiles) {
-    try {
-      if (fs.existsSync(pf)) {
-        let content = fs.readFileSync(pf, 'utf-8');
-        if (content.includes('AGENTS_DEPTH')) {
-          content = content.replace(/export AGENTS_DEPTH=.*/, depthLine);
+  // Parse remaining args (positional and flags)
+  while (i < args.length) {
+    const arg = args[i];
+
+    switch (arg) {
+      case '--json':
+        result.flags.json = true;
+        i++;
+        break;
+      case '--global':
+        result.flags.global = true;
+        i++;
+        break;
+      case '--all':
+      case '-a':
+        result.flags.all = true;
+        i++;
+        break;
+      case '--quick':
+        result.flags.quick = true;
+        i++;
+        break;
+      case '--mcp':
+        result.flags.mcp = true;
+        i++;
+        break;
+      case '--rules':
+        result.flags.rules = true;
+        i++;
+        break;
+      case '--skills':
+        result.flags.skills = true;
+        i++;
+        break;
+      case '--fix':
+        result.flags.fix = true;
+        i++;
+        break;
+      case '--project':
+        if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+          result.flags.project = args[i + 1];
+          i += 2;
         } else {
-          content += `\n${depthLine}\n`;
+          console.error('--project requires a path argument');
+          process.exit(1);
         }
-        fs.writeFileSync(pf, content, 'utf-8');
-      }
-    } catch { /* skip unwritable profiles */ }
-  }
-
-  message = `Applied: ${linked} linked, ${unlinked} unlinked, ${skipped} skipped. AGENTS_DEPTH=${depth}. Restart your shell.`;
-}
-
-function cycleDepth() {
-  depth = depth >= 5 ? 1 : depth + 1;
-}
-
-function promptGlobalPath() {
-  message = 'Enter global AGENTS.md path (esc to cancel): ';
-  render();
-
-  // Simple input mode
-  process.stdin.setRawMode(false);
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  rl.question('', (answer) => {
-    rl.close();
-    const trimmed = answer.trim();
-    if (trimmed && trimmed !== '\x1b') {
-      if (trimmed.startsWith('~/') || trimmed.startsWith('~')) {
-        globalPath = trimmed.replace(/^~/, HOME);
-      } else if (trimmed.startsWith('/')) {
-        globalPath = trimmed;
-      }
-      // Re-check symlink status for all agents with new global path
-      for (const s of agentStates) {
-        if (s.agent.global && !hasNative(s.agent)) {
-          s.isLinked = isSymlinkedTo(resolveTarget(s.agent.global), globalPath);
+        break;
+      case '--depth':
+        if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+          result.flags.depth = parseInt(args[i + 1], 10);
+          i += 2;
+        } else {
+          i++;
         }
-      }
+        break;
+      case '--path':
+        if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+          result.flags.newPath = args[i + 1];
+          i += 2;
+        } else {
+          i++;
+        }
+        break;
+      case '--version':
+      case '-v':
+        result.command = 'version';
+        i++;
+        break;
+      case '--help':
+      case '-h':
+        result.command = 'help';
+        i++;
+        break;
+      case '--list':
+      case '-l':
+        result.command = 'rules';
+        result.subcommand = 'list';
+        i++;
+        break;
+      case '--link-all':
+        result.command = 'rules';
+        result.subcommand = 'link';
+        result.flags.all = true;
+        i++;
+        break;
+      default:
+        // Positional args go to sargs
+        if (arg.startsWith('-')) {
+          console.error(`Unknown flag: ${arg}`);
+          process.exit(1);
+        }
+        result.sargs.push(arg);
+        i++;
     }
-    message = '';
-    process.stdin.setRawMode(true);
-    render();
-  });
+  }
+
+  return result;
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
-
-function init() {
-  // Read AGENTS_DEPTH from env
-  const envDepth = parseInt(process.env.AGENTS_DEPTH, 10);
-  if (envDepth >= 1 && envDepth <= 10) {
-    depth = envDepth;
-  }
-
-  // Read AGENTS_PATH from env
-  const envPath = process.env.AGENTS_PATH;
-  if (envPath) {
-    globalPath = envPath.replace(/^~/, HOME);
-  }
-
-  // Build agent states
-  agentStates = AGENTS.map(agent => {
-    const target = agent.global ? resolveTarget(agent.global) : null;
-    const isLinked = target ? isSymlinkedTo(target, globalPath) : false;
-    return { agent, target, isLinked };
-  });
-}
-
-// ── Input ──────────────────────────────────────────────────────────────────
-
-function handleInput(key) {
-  if (key.name === 'q') {
-    running = false;
-    return;
-  }
-
-  if (key.name === 'up' || key.name === 'k') {
-    cursorIdx = Math.max(0, cursorIdx - 1);
-    message = '';
-  } else if (key.name === 'down' || key.name === 'j') {
-    cursorIdx = Math.min(agentStates.length, cursorIdx + 1);
-    message = '';
-  } else if (key.name === 'space') {
-    if (cursorIdx < agentStates.length) {
-      toggleAgent();
-    }
-    message = '';
-  } else if (key.name === 'return') {
-    if (cursorIdx === agentStates.length) {
-      applyChanges();
-    }
-  } else if (key.name === 'd') {
-    cycleDepth();
-    message = '';
-  } else if (key.name === 'g') {
-    promptGlobalPath();
-    return; // promptGlobalPath handles render
-  }
-
-  render();
-}
-
-// ── Main ───────────────────────────────────────────────────────────────────
+// ── Main ─────────────────────────────────────────────────────────────────────
 
 function main() {
-  // Check for non-interactive flags
-  if (process.argv.includes('--link-all') || process.argv.includes('-a')) {
-    // Non-interactive: link all
-    init();
-    for (const s of agentStates) {
-      if (s.agent.global && !hasNative(s.agent)) {
-        s.isLinked = true;
+  const parsed = parseArgs(process.argv);
+  const { command, subcommand, sargs, flags } = parsed;
+
+  // Route
+  switch (command) {
+    case 'version':
+      console.log(VERSION);
+      break;
+
+    case 'help':
+    case null:
+      console.log(HELP);
+      break;
+
+    case 'rules': {
+      const rules = require('./commands/rules');
+      // Map legacy --all flag to link --all
+      if (subcommand === 'link' && flags.all) {
+        rules.run({ subcommand: 'link', json: flags.json, depth: flags.depth });
+      } else if (subcommand === 'unlink') {
+        rules.run({ subcommand: 'unlink', json: flags.json });
+      } else if (subcommand === 'depth') {
+        rules.run({ subcommand: 'depth', json: flags.json, depth: sargs[0] || flags.depth });
+      } else if (subcommand === 'path') {
+        rules.run({ subcommand: 'path', json: flags.json, path: sargs[0] || flags.newPath });
+      } else {
+        rules.run({ subcommand: subcommand || 'list', json: flags.json, depth: flags.depth });
+      }
+      break;
+    }
+
+    case 'mcp': {
+      const mcp = require('./commands/mcp');
+      // Pass --all flag through for pull command
+      const mcpArgs = flags.all ? ['--all', ...sargs] : sargs;
+      mcp.run({ subcommand, args: mcpArgs, json: flags.json });
+      break;
+    }
+
+    case 'skills': {
+      const skills = require('./commands/skills');
+      skills.run({ subcommand: sargs[0] || subcommand, args: sargs, json: flags.json, project: flags.project });
+      break;
+    }
+
+    case 'setup': {
+      const setup = require('./commands/setup');
+      setup.run({
+        quick: flags.quick || subcommand === 'quick',
+        mcp: flags.mcp || subcommand === 'mcp',
+        rules: flags.rules || subcommand === 'rules',
+        skills: flags.skills || subcommand === 'skills',
+        json: flags.json,
+        project: flags.project,
+      });
+      break;
+    }
+
+    case 'status':
+    case 'doctor': {
+      const status = require('./commands/status');
+      status.run({
+        doctor: flags.doctor || command === 'doctor' || subcommand === 'doctor',
+        fix: flags.fix,
+        json: flags.json,
+      });
+      break;
+    }
+
+    case 'tui':
+    default: {
+      // If no command specified and stdin is a TTY, open the TUI
+      if (!command && process.stdin.isTTY) {
+        const tui = require('./commands/tui');
+        tui.run();
+      } else if (!command) {
+        // Headless with no command: show help
+        console.log(HELP);
+      } else {
+        console.error(`Unknown command: ${command}`);
+        console.log(HELP);
+        process.exit(1);
       }
     }
-    applyChanges();
-    console.log(message);
-    process.exit(0);
   }
-
-  if (process.argv.includes('--depth')) {
-    const idx = process.argv.indexOf('--depth');
-    const val = parseInt(process.argv[idx + 1], 10);
-    if (val >= 1 && val <= 10) {
-      depth = val;
-      console.log(`AGENTS_DEPTH=${depth}`);
-      process.exit(0);
-    }
-  }
-
-  if (process.argv.includes('--list') || process.argv.includes('-l')) {
-    init();
-    for (const s of agentStates) {
-      const status = hasNative(s.agent) ? 'native' :
-                     !s.agent.global ? 'n/a' :
-                     s.isLinked ? 'linked' : 'unlinked';
-      console.log(`${status.padEnd(10)} ${s.agent.name.padEnd(22)} ${agentLabel(s.agent)}`);
-    }
-    process.exit(0);
-  }
-
-  if (process.argv.includes('--help') || process.argv.includes('-h')) {
-    console.log(`
-  ${C.bold}agents-standard${C.reset} — Manage AGENTS.md configuration
-
-  ${C.bold}Usage:${C.reset}
-    agents-standard              Interactive TUI (default)
-    agents-standard --list       List all agents and link status
-    agents-standard --link-all   Symlink all agents non-interactively
-    agents-standard --depth N    Set AGENTS_DEPTH (1-10)
-    agents-standard --help       Show this help
-
-  ${C.bold}Interactive keys:${C.reset}
-    ↑↓ / jk    Navigate agents
-    Space      Toggle symlink on/off
-    d          Cycle AGENTS_DEPTH (1-5)
-    g          Change global AGENTS.md path
-    Enter      Submit changes (when on "Submit changes" bar)
-    q          Quit
-
-  ${C.bold}Project setup:${C.reset}
-    .agents/AGENTS.md           Project base rules (committed)
-    AGENTS.md at repo root      Project active / PRD rules (symlinked)
-    .agents/mcp-settings.json   Project MCP servers
-    .agents/skills/**/SKILL.md  Project skills
-`);
-    process.exit(0);
-  }
-
-  // Interactive mode
-  init();
-  hideCursor();
-  render();
-
-  process.stdin.setRawMode(true);
-  process.stdin.on('keypress', (str, key) => {
-    if (key && key.ctrl && key.name === 'c') {
-      showCursor();
-      process.stdout.write('\n');
-      process.exit(0);
-    }
-    handleInput(key);
-  });
-
-  process.on('exit', () => {
-    showCursor();
-    process.stdout.write('\n');
-  });
 }
 
 main();

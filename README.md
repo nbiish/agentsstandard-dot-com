@@ -6,7 +6,7 @@
 
 ## The Standard
 
-One file: `AGENTS.md`. Four scopes. All agents.
+One directory: `~/.agents/`. Four resource types. Five-tier loading. All agents.
 
 ```
 ~/.agents/AGENTS.md              ← Global Base (user preferences/security, loaded first)
@@ -20,11 +20,29 @@ Rules cascade and extend, not replace. Same model as `.editorconfig`, `.eslintrc
 
 Full specification: **[nbiish/agents-standard](https://github.com/nbiish/agents-standard)**
 
+## Unified Loading Protocol
+
+All four resource types are loaded in a single pass with defined inheritance semantics:
+
+| Resource | Format | Inheritance Model | Scopes |
+|----------|--------|------------------|--------|
+| **Rules** (AGENTS.md) | Plain Markdown | **Concatenate** (extend) | 5-tier: global → PRD → base → active → folder |
+| **Skills** (**/SKILL.md) | Markdown | **Override by name** | 2-tier: global → project |
+| **MCP** (mcp-settings.json / .mcp.json) | JSON | **Merge by server name** | 3-tier: catalog → project → agent-specific |
+| **Providers** (providers.txt) | TSV reference | **Global reference only** | 1-tier: global |
+
+**Conflict resolution**: Most-specific-wins across all resource types. Project skills override global skills by name. Agent-specific MCP extends project MCP. Folder rules override project rules.
+
+**Conformance levels**: Minimal (single rules file), Standard (full cascade + skills + MCP), Full (all four resource types).
+
 ## Separation of Concerns: llms.txt (PRD) vs AGENTS.md (Rules)
 
 The standard unifies project instructions by separating **what/why** from **how**:
 * **`llms.txt` (Project PRD)**: Located at `{project_root}/llms.txt`. Defines the codebase context, active product requirements, tech stack, API definitions, and roadmap (the "What" and "Why").
 * **`AGENTS.md` (Behavioral Cascade)**: Cascades across four scopes. Defines the guidelines, safety constraints, coding style preferences, and CLI commands the agent must follow (the "How").
+* **`**/SKILL.md` (Agent Skills)**: Self-contained capability modules at global and project scope. Project skills override global skills by name.
+* **`mcp-settings.json` / `.mcp.json` (MCP Servers)**: Dual-layer architecture — global catalog (private) bridges to project live config (committable).
+* **`providers.txt` (LLM Providers)**: Global reference for provider endpoints, models, and env var names.
 
 ## Resolution Order
 
@@ -160,7 +178,8 @@ Full structured data: [`providers.json`](providers.json)
 # Global ~/.agents/ (behavior + tooling)
 ~/.agents/
 ├── AGENTS.md              ← Behavior rules (global base, loaded first)
-├── mcp-settings.json      ← MCP server configs (all agents read from here)
+├── mcp-settings.json      ← MCP server CATALOG (definitions with keys — PRIVATE)
+├── providers.txt          ← LLM provider reference (global only, no cascade)
 └── skills/                ← Agent Skills (reusable capabilities)
     └── **/SKILL.md        ← Skills discovered by all agents
 ```
@@ -169,16 +188,20 @@ Full structured data: [`providers.json`](providers.json)
 # Project .agents/ (tooling + project base rules)
 {project}/.agents/
 ├── AGENTS.md              ← Project base rules (committed rules for tech stack, deployment)
-├── mcp-settings.json      ← Project-specific MCP servers
-└── skills/                ← Project-specific agent skills
+└── skills/                ← Project-specific agent skills (override global by name)
     └── **/SKILL.md
+
+# Project root (not in .agents/)
+{project}/.mcp.json        ← Project MCP live config (${ENV_VAR} refs, committable)
 ```
 
 > **Note:** Project base rules go in `{project}/.agents/AGENTS.md`, and project active/PRD rules (commonly modified task/feature rules) go in `{project}/AGENTS.md` at the repo root.
 
 - **AGENTS.md** = how the agent should *behave* (this standard)
-- **mcp-settings.json** = what tools the agent can *use* (MCP servers)
 - **skills/**/SKILL.md** = what the agent can *do* ([Agent Skills](https://agentskills.io))
+- **mcp-settings.json** = what tools are available (MCP catalog, private)
+- **.mcp.json** = project MCP live config (public, ${ENV_VAR} refs)
+- **providers.txt** = which LLM providers/models to use
 
 ## Contribute
 
@@ -200,9 +223,10 @@ Want to change the spec itself? Open a **[spec change](https://github.com/nbiish
 
 - **[Agent Skills](https://agentskills.io)** (SKILL.md) = what the agent can *do*
 - **Agents Standard** (AGENTS.md) = how the agent should *behave*
-- **mcp-settings.json** = what external tools are available
+- **mcp-settings.json** = what external tools are available (MCP catalog)
+- **providers.txt** = which LLM providers/models to use
 
-Both use the `.agents/` directory. They complement each other.
+All four live in `~/.agents/`. They complement each other. Skills override by name across global→project scope. MCP uses dual-layer architecture (catalog→live). Providers are global-only reference.
 
 ## Repos
 

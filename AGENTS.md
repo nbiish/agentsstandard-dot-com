@@ -1,0 +1,1 @@
+/Users/nbiish/code/ainish-coder/AGENTS.md

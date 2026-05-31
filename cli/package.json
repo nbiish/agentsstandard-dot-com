@@ -1,14 +1,19 @@
 {
   "name": "agents-standard",
-  "version": "1.3.0",
-  "description": "CLI tool for managing the AGENTS.md standard — symlink your global rules to all agent config files with a checkbox TUI",
+  "version": "2.0.0-alpha",
+  "description": ".agents CLI — Manage AGENTS.md rules, MCP servers, skills, and agent configuration across 30+ AI coding agents. TUI + headless/JSON API modes.",
   "bin": {
+    ".agents": "./index.js",
     "agents-standard": "./index.js",
     "agents": "./index.js"
   },
-  "files": ["index.js"],
+  "files": [
+    "index.js",
+    "lib/",
+    "commands/"
+  ],
   "engines": { "node": ">=16" },
   "license": "MIT",
   "repository": "https://github.com/nbiish/agents-standard",
-  "keywords": ["agents", "ai", "llm", "coding-agent", "configuration", "standard"]
+  "keywords": ["agents", "ai", "llm", "coding-agent", "configuration", "standard", "mcp", "agents.md", "claude-code", "cursor", "windsurf", "gemini-cli"]
 }

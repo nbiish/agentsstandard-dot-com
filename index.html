@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agents Standard — The AGENTS.md Hierarchical Configuration Standard</title>
-<meta name="description" content="The open standard for AI agent configuration. AGENTS.md files cascade from global user rules through project rules to folder-specific rules. One convention, all agents.">
+<meta name="description" content="The open standard for AI agent configuration. One directory, four resource types — rules, skills, MCP servers, providers — with five-tier cascading loading. All agents.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://agentsstandard.com/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 <meta property="og:title" content="Agents Standard — The AGENTS.md Hierarchical Configuration Standard">
-<meta property="og:description" content="The open standard for AI agent configuration. AGENTS.md files cascade from global → project → folder. One convention, all agents.">
+<meta property="og:description" content="The open standard for AI agent configuration. One directory, four resource types — rules, skills, MCP, providers. Five-tier loading. All agents.">
 <meta property="og:url" content="https://agentsstandard.com/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
@@ -69,7 +69,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color
 
 <!-- SPECIFICATION -->
 <h2 id="spec">Specification</h2>
-<p>One file convention. Five-tier loading. All agents.</p>
+<p>One directory. Four resource types. Five-tier loading. All agents.</p>
 
 <p>The standard unifies project instructions by separating <strong>what/why</strong> (Project PRD) from <strong>how</strong> (Behavioral Rules):</p>
 
@@ -98,8 +98,23 @@ Task-specific active instructions and session rules. Highly visible, commonly mo
 Component-specific rules. Directory-scoped overrides (e.g. <code>src/AGENTS.md</code>, <code>tests/AGENTS.md</code>). <strong>Loaded last.</strong></p>
 </div>
 
+<h3>Unified Loading Protocol</h3>
+<p>All four resource types are loaded in a single pass with defined inheritance semantics:</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Resource</th><th>Format</th><th>Inheritance</th><th>Scopes</th></tr></thead>
+<tbody>
+<tr><td><strong>Rules</strong> (AGENTS.md)</td><td>Plain Markdown</td><td><strong>Concatenate</strong> (extend)</td><td>5-tier: global → PRD → base → active → folder</td></tr>
+<tr><td><strong>Skills</strong> (**/SKILL.md)</td><td>Markdown</td><td><strong>Override by name</strong></td><td>2-tier: global → project</td></tr>
+<tr><td><strong>MCP</strong> (.mcp.json)</td><td>JSON</td><td><strong>Merge by server name</strong></td><td>3-tier: catalog → project → agent-specific</td></tr>
+<tr><td><strong>Providers</strong> (providers.txt)</td><td>TSV reference</td><td><strong>Global reference only</strong></td><td>1-tier: global</td></tr>
+</tbody>
+</table>
+</div>
+
 <h3>Loading Model: Scoped Concatenation</h3>
-<p>Each tier's file is <strong>concatenated</strong> into the agent's context — not replaced. The project root acts as a <strong>ceiling</strong> — agents never traverse above it. Your security practices in <code>~/.agents/AGENTS.md</code> always apply; the project PRD in <code>llms.txt</code> sets functional scope; project base conventions build on top; active task instructions direct the session; and folder-specific rules apply locally. <strong>Never</strong> read files from parent directories outside the project.</p>
+<p>Rules are <strong>concatenated</strong> — not replaced. The project root acts as a <strong>ceiling</strong> — agents never traverse above it. Your security practices in <code>~/.agents/AGENTS.md</code> always apply; the project PRD in <code>llms.txt</code> sets functional scope; project base conventions build on top; active task instructions direct the session; and folder-specific rules apply locally. Skills override by name (project replaces global). MCP merges by server name. Providers are global reference. <strong>Never</strong> read files from parent directories outside the project.</p>
 
 <div class="card">
 <p><strong>~/.agents/AGENTS.md</strong> — Loaded first, always. Canonical global standard location for user safety and preferences.</p>
@@ -140,40 +155,67 @@ Component-specific rules. Directory-scoped overrides (e.g. <code>src/AGENTS.md</
 <p>If an agent only supports a single rules file, it should read the project root <code>AGENTS.md</code> (or the symlinked file like <code>CLAUDE.md</code>) to get the active task context. This is the canonical touchpoint for active task instructions. Alternatively, it can read the global <code>~/.agents/AGENTS.md</code>. Tools that only read one file are first-class citizens.</p>
 
 <h3>Dual-Layer MCP Configuration</h3>
-<p>MCP servers follow a two-layer model — global shared, agent-specific extended:</p>
+<p>MCP servers follow a two-file architecture — catalog (private) and live config (committable):</p>
 
 <div class="card">
-<p><strong><code>~/.agents/mcp-settings.json</code></strong> — Global MCP servers available across <em>all</em> agents and IDEs. Shared foundation. Configure once, every agent gains access. Browsers, search, filesystem, memory, databases — set them here.</p>
+<p><strong><code>~/.agents/mcp-settings.json</code></strong> — Global MCP server <strong>catalog</strong>. Definitions with API keys. <strong>PRIVATE — never pointed at an agent directly.</strong> Used only by <code>.agents mcp pull</code> to bridge servers into projects.</p>
 </div>
 
 <div class="card">
-<p><strong>Agent-specific MCP config</strong> — Each agent can also read its own MCP config (<code>~/.claude.json</code>, <code>.cursor/mcp.json</code>, <code>~/.gemini/settings.json</code>, etc.) for finer customization. Agent-specific configs <em>extend</em> — not replace — the global set. This prevents duplicating configs across every agent while still allowing per-tool customization.</p>
+<p><strong><code>.mcp.json</code></strong> — Project <strong>live config</strong>. Uses <code>${ENV_VAR}</code> references, not raw keys. <strong>Safe to commit.</strong> All agents read from here. Pulled from the catalog via <code>.agents mcp pull</code>.</p>
+</div>
+
+<div class="card">
+<p><strong>Agent-specific MCP config</strong> — Each agent can also read its own MCP config (<code>~/.claude.json</code>, <code>.cursor/mcp.json</code>, etc.) for finer customization. Agent-specific configs <em>extend</em> — not replace — the project set. Same-name server: agent-specific wins.</p>
+</div>
+
+<h3>Security Invariants</h3>
+<ol>
+<li>No raw API keys in runtime configs — <code>.mcp.json</code> uses <code>${ENV_VAR}</code> refs only</li>
+<li>No secrets in rules — AGENTS.md must never contain keys or tokens</li>
+<li>No secrets in skills — SKILL.md may reference env var names only</li>
+<li>No secrets in providers.txt — defines endpoints and env var names, never values</li>
+<li>No traversal above project root — prevents parent directory injection</li>
+<li>Global rules are immutable base — project/folder extend but cannot weaken global safety</li>
+</ol>
+
+<h3>Conformance Levels</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Level</th><th>Rules</th><th>Skills</th><th>MCP</th><th>Providers</th></tr></thead>
+<tbody>
+<tr><td><strong>Minimal</strong></td><td>Single file</td><td>Not required</td><td>Not required</td><td>Not required</td></tr>
+<tr><td><strong>Standard</strong></td><td>Full 5-tier cascade</td><td>Global + project</td><td>Project .mcp.json</td><td>Not required</td></tr>
+<tr><td><strong>Full</strong></td><td>Full 5-tier cascade</td><td>+ override resolution</td><td>+ agent-specific merge</td><td>providers.txt</td></tr>
+</tbody>
+</table>
 </div>
 
 <h3>~/.agents/ — One Directory, Everything Agents Need</h3>
 
 <pre><code>~/.agents/
 ├── AGENTS.md              ← Behavior rules (this standard — the canonical global path)
-├── mcp-settings.json      ← MCP servers shared across all agents
+├── mcp-settings.json      ← MCP server CATALOG (definitions with keys — PRIVATE)
+├── providers.txt          ← LLM provider reference (global only, no cascade)
 └── skills/                ← Agent Skills (capabilities)
     └── **/SKILL.md        ← Skills discovered by all agents</code></pre>
 
-<p>Tools using <code>~/.config/AGENTS.md</code> should move to <code>~/.agents/AGENTS.md</code>. Users shouldn't have to wonder if their rules are in the right place or if they're overprompting. One directory. Three concerns (behavior, tools, skills). Zero confusion.</p>
+<p>Tools using <code>~/.config/AGENTS.md</code> should move to <code>~/.agents/AGENTS.md</code>. Users shouldn't have to wonder if their rules are in the right place or if they're overprompting. One directory. Four concerns (rules, skills, MCP, providers). Zero confusion.</p>
 
-<h3>AGENTS_DEPTH</h3>
-<p>Control how many levels of <code>AGENTS.md</code> are loaded <strong>downward from project root</strong> (never upward) with the <code>AGENTS_DEPTH</code> environment variable:</p>
+<h3>Environment Variables</h3>
 
 <div class="table-wrap">
 <table>
-<thead><tr><th>Value</th><th>Behavior</th></tr></thead>
+<thead><tr><th>Variable</th><th>Purpose</th><th>Default</th></tr></thead>
 <tbody>
-<tr><td><code>1</code></td><td><code>~/.agents/AGENTS.md</code> only — global rules, no project or folder tiers</td></tr>
-<tr><td><code>2</code></td><td>Global + project base <code>.agents/AGENTS.md</code> + project <code>llms.txt</code></td></tr>
-<tr><td><code>3</code></td><td>Global + project base <code>.agents/AGENTS.md</code> + project <code>llms.txt</code> + project root <code>AGENTS.md</code> (default)</td></tr>
-<tr><td><code>4+</code></td><td>Global + project base <code>.agents/AGENTS.md</code> + project <code>llms.txt</code> + project root <code>AGENTS.md</code> + cwd sub-folder <code>AGENTS.md</code></td></tr>
+<tr><td><code>AGENTS_DEPTH</code></td><td>Controls directory tiers for AGENTS.md loading (1-10)</td><td><code>3</code></td></tr>
+<tr><td><code>AGENTS_PATH</code></td><td>Override the global AGENTS.md path</td><td><code>~/.agents/AGENTS.md</code></td></tr>
+<tr><td><code>AGENTS_ROOT</code></td><td>Override project root detection</td><td>inherited from shell's initial <code>$PWD</code></td></tr>
 </tbody>
 </table>
 </div>
+
+<p><code>AGENTS_DEPTH</code> controls how many levels of <code>AGENTS.md</code> are loaded <strong>downward from project root</strong> (never upward). Depth only affects rules — skills, MCP, and providers are not depth-limited.</p>
 
 <h3>File Format</h3>
 <p>Plain <code>Markdown</code>. No <code>YAML</code> frontmatter. No schema. Just write rules.</p>
@@ -233,9 +275,9 @@ You are a senior engineer who writes production-grade code.
    │  "Test files mirror src/ structure"
    │  "Use describe/it blocks, not test()"
    │
-   └── .agents/                          ← Tooling (MCP + Skills)
-      ├── mcp-settings.json              ← project MCP servers
-      └── skills/**/SKILL.md             ← project skills</code></pre>
+   ├── .mcp.json                         ← Project MCP live config (${ENV_VAR} refs, committable)
+   └── .agents/                          ← Tooling (Skills)
+      └── skills/**/SKILL.md             ← project skills (override global by name)</code></pre>
 
 <!-- AGENT CONFIG MAP -->
 <h2 id="agents">Agent Config Map</h2>
@@ -377,6 +419,12 @@ export OPENAI_API_KEY="zai-..."</code></pre>
 
 <p>Full structured data: <a href="providers.json">providers.json</a> — machine-readable provider endpoints, auth patterns, and referral codes.</p>
 
+<h3>providers.txt Standard</h3>
+<p><code>~/.agents/providers.txt</code> is a human-readable TSV reference document defining LLM providers and models that any coding agent can read. It lives alongside AGENTS.md and mcp-settings.json in <code>~/.agents/</code>. Global only — no cascade. Agent-specific provider configs override providers.txt.</p>
+<div class="card">
+<p><strong>Design principle:</strong> providers.txt is a base standard that agents CAN read, not a replacement for agent-specific provider configuration. Tool makers should keep their own per-tool configs for provider/model overrides. API keys are never stored in this file — use <code>${ENV_VAR}</code> references.</p>
+</div>
+
 <!-- SETUP / SYMLINK -->
 <h2 id="symlink">Setup: One Source of Truth</h2>
 <p>Create <code>~/.agents/AGENTS.md</code> as your global rules file, then symlink it to every agent's config location:</p>
@@ -508,8 +556,9 @@ ln -sf ../AGENTS.md .github/copilot-instructions.md
 # Use .agents/ for tooling configuration and project base rules
 mkdir -p .agents/skills
 # .agents/AGENTS.md          — project base rules
-# .agents/mcp-settings.json  — project MCP servers
-# .agents/skills/**/SKILL.md — project agent skills</code></pre>
+# .agents/skills/**/SKILL.md — project agent skills (override global by name)
+# .mcp.json                  — project MCP live config (at project root, ${ENV_VAR} refs)
+# ~/.agents/providers.txt    — LLM provider reference (global only)</code></pre>
 
 <!-- ADOPT -->
 <h2 id="adopt">Adopt the Standard</h2>
@@ -523,10 +572,10 @@ mkdir -p .agents/skills
 <li>Merge rules: global as base, most specific scope wins conflicts</li>
 </ol>
 
-<p>That's it. Four steps. No dependencies. No schema. No build step. Just markdown files in directories.</p>
+<p>That's it. No dependencies. No schema. No build step. Just markdown files in directories.</p>
 
 <div class="card">
-<p><strong>Why this works:</strong> It follows conventions every developer already knows — <code>.editorconfig</code>, <code>.eslintrc</code>, <code>.gitignore</code>, <code>pyproject.toml</code>. Directory-scoped, cascading, plain text. No new concepts to learn.</p>
+<p><strong>Why this works:</strong> It follows conventions every developer already knows — <code>.editorconfig</code>, <code>.eslintrc</code>, <code>.gitignore</code>, <code>pyproject.toml</code>. Directory-scoped, cascading, plain text. Four resource types, each with the inheritance model that matches its nature. No new concepts to learn.</p>
 </div>
 
 <h3>Beyond Rules: A Complete Agent Configuration Directory</h3>
@@ -534,27 +583,32 @@ mkdir -p .agents/skills
 
 <pre><code>~/.agents/
 ├── AGENTS.md              ← Behavior rules (global base, loaded first)
-├── mcp-settings.json      ← MCP server configs (all agents read from here)
+├── mcp-settings.json      ← MCP server CATALOG (definitions — PRIVATE, never fed to agents)
+├── providers.txt          ← LLM provider reference (global only, no cascade)
 └── skills/                ← Agent Skills (reusable capabilities)
     └── **/SKILL.md        ← Skills discovered by all agents
 
 {project}/.agents/             ← Tooling & project base rules
 ├── AGENTS.md              ← Project base rules (tech stack, deployment)
-├── mcp-settings.json      ← Project-specific MCP servers
-└── skills/**/SKILL.md     ← Project-specific agent skills</code></pre>
+└── skills/**/SKILL.md     ← Project-specific agent skills (override global by name)
+
+{project}/.mcp.json            ← Project MCP live config (${ENV_VAR} refs, committable)</code></pre>
 
 <div class="card">
 <p><strong>AGENTS.md</strong> = how the agent should <em>behave</em> (this standard)<br>
-<strong>mcp-settings.json</strong> = what tools the agent can <em>use</em> (MCP servers)<br>
-<strong>skills/**/SKILL.md</strong> = what the agent can <em>do</em> (<a href="https://agentskills.io">Agent Skills</a>)</p>
+<strong>skills/**/SKILL.md</strong> = what the agent can <em>do</em> (<a href="https://agentskills.io">Agent Skills</a>)<br>
+<strong>mcp-settings.json</strong> = what tools are available (MCP catalog, private)<br>
+<strong>.mcp.json</strong> = project MCP live config (public, ${ENV_VAR} refs)<br>
+<strong>providers.txt</strong> = which LLM providers/models to use</p>
 </div>
 
-<h3>Relationship to Agent Skills</h3>
-<p>The <a href="https://agentskills.io">Agent Skills</a> standard defines how agents discover and load <em>capabilities</em> (SKILL.md files). The <code>AGENTS.md</code> standard defines how agents discover and load <em>behavior rules</em>. They complement each other:</p>
+<h3>Relationship to Agent Skills & Providers</h3>
+<p>The <a href="https://agentskills.io">Agent Skills</a> standard defines how agents discover and load <em>capabilities</em> (SKILL.md files). The <code>AGENTS.md</code> standard defines how agents discover and load <em>behavior rules</em>. The <code>providers.txt</code> standard defines which LLM providers/models to use. They complement each other:</p>
 <ul>
 <li><strong>SKILL.md</strong> = what the agent can <em>do</em></li>
 <li><strong>AGENTS.md</strong> = how the agent should <em>behave</em></li>
-<li><strong>mcp-settings.json</strong> = what external tools are available</li>
+<li><strong>mcp-settings.json</strong> = what external tools are available (MCP catalog)</li>
+<li><strong>providers.txt</strong> = which LLM providers/models to use</li>
 </ul>
 
 <!-- CONTRIBUTE -->
@@ -576,7 +630,7 @@ mkdir -p .agents/skills
 
 <footer>
 <p><strong>Agents Standard</strong> — <a href="https://agentsstandard.com">agentsstandard.com</a> · <a href="https://github.com/nbiish/agents-standard">Spec</a> · <a href="https://github.com/nbiish/agentsstandard-dot-com">Site</a> · <a href="https://github.com/nbiish/agentsstandard-dot-com/issues/new">Add an Agent</a></p>
-<p>One convention. Five scopes. All agents.</p>
+<p>One directory. Four resource types. All agents.</p>
 </footer>
 
 </body>
